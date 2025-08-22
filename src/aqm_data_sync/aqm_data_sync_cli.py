@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 
 import typer
+from pydantic import BaseModel
+
 from aqm_data_sync.core import (
     SRWFixedContext,
     SRWFixedSyncRunner,
@@ -10,7 +12,6 @@ from aqm_data_sync.core import (
     UseCase,
     UseCaseKey,
 )
-from pydantic import BaseModel
 
 os.environ["NO_COLOR"] = "1"
 app = typer.Typer(pretty_exceptions_enable=False)

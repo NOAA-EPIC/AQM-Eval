@@ -6,8 +6,9 @@ from enum import StrEnum, unique
 from pathlib import Path
 from typing import Any, Generic, TypeVar
 
-from aqm_data_sync.logging_aqm_data_sync import LOGGER
 from pydantic import BaseModel, computed_field, model_validator
+
+from aqm_data_sync.logging_aqm_data_sync import LOGGER
 
 
 @unique
@@ -151,7 +152,7 @@ class AbstractS3SyncRunner(ABC, Generic[T]):
     def _update_include_templates_(self, cmd: list[str]) -> None:
         pass
 
-    def _handle_max_concurrent_request_reset_(self):
+    def _handle_max_concurrent_request_reset_(self) -> None:
         if self._ctx.system_max_concurrent_requests is not None:
             LOGGER("resetting max_concurrent_requests")
             subprocess.check_call(

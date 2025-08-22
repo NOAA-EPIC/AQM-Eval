@@ -1,6 +1,7 @@
 import logging
 import logging.config
 from enum import StrEnum, unique
+from typing import Literal
 
 _PROJECT_NAME = "aqm-data-sync"
 
@@ -19,11 +20,11 @@ class LoggerWrapper:
 
     def __call__(
         self,
-        msg,
-        level=logging.INFO,
+        msg: str,
+        level: int = logging.INFO,
         exc_info: Exception | None = None,
         stacklevel: int = 2,
-    ):
+    ) -> None:
         """
         Log a message.
         Args:
