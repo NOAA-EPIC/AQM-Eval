@@ -1,0 +1,24 @@
+name: Docker Build and Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker-precommit:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: |
+        docker build -t AQM-Eval:latest .
+
+    - name: Run pre-commit script with source code
+      run: |
+        docker run --rm \
+          -v ${{ github.workspace }}:/workspace \
+          -w /workspace \
+          AQM-Eval:latest \
+          conda run -n AQM-Eval --no-capture-output python pre-commit.py
