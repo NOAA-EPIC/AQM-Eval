@@ -1,4 +1,4 @@
-name: aqm-data-sync
+name: AQM-Eval
 channels:
   - conda-forge
   - nodefaults
@@ -10,3 +10,4 @@ dependencies:
   - awscli
   - black
   - mypy
+  - pre-commit

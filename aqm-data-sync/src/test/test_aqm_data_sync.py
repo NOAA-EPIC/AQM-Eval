@@ -2,10 +2,9 @@ import os
 import subprocess
 from pathlib import Path
 
-from typer.testing import CliRunner
-
 from aqm_data_sync.aqm_data_sync_cli import app
 from aqm_data_sync.core import UseCaseKey
+from typer.testing import CliRunner
 
 
 def test_help() -> None:

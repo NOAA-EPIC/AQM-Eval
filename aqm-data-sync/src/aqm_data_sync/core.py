@@ -2,13 +2,12 @@ import datetime
 import logging
 import subprocess
 from abc import ABC, abstractmethod
-from enum import unique, StrEnum
+from enum import StrEnum, unique
 from pathlib import Path
-from typing import Any, TypeVar, Generic
-
-from pydantic import BaseModel, computed_field, model_validator
+from typing import Any, Generic, TypeVar
 
 from aqm_data_sync.logging_aqm_data_sync import LOGGER
+from pydantic import BaseModel, computed_field, model_validator
 
 
 @unique

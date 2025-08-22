@@ -1,6 +1,6 @@
 import logging
 import logging.config
-from enum import unique, StrEnum
+from enum import StrEnum, unique
 
 _PROJECT_NAME = "aqm-data-sync"
 
