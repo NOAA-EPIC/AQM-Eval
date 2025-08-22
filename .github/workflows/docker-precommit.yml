@@ -11,14 +11,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Build Docker image
-      run: |
-        docker build -t aqm-eval:latest .
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: aqm-eval:${{ github.ref }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     - name: Run pre-commit script with source code
       run: |
         docker run --rm \
           -v ${{ github.workspace }}:/workspace \
           -w /workspace \
-          AQM-Eval:latest \
+          aqm-eval:${{ github.ref }} \
           conda run -n aqm-eval --no-capture-output python pre-commit.py
