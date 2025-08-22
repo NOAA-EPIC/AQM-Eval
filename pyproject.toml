@@ -1,7 +1,7 @@
 [project]
-name = "aqm-data-sync"
+name = "aqm-eval"
 version = "0.0.1"
-description = "Synchronize AQM datasets with storage targets"
+description = "UFS-AQM Evaluation and Verification utilities and scripts"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
