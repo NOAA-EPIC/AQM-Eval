@@ -1,4 +1,4 @@
-name: AQM-Eval
+name: aqm-eval
 channels:
   - conda-forge
   - nodefaults

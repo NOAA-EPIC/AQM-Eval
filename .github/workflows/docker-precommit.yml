@@ -13,7 +13,7 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t AQM-Eval:latest .
+        docker build -t aqm-eval:latest .
 
     - name: Run pre-commit script with source code
       run: |
@@ -21,4 +21,4 @@ jobs:
           -v ${{ github.workspace }}:/workspace \
           -w /workspace \
           AQM-Eval:latest \
-          conda run -n AQM-Eval --no-capture-output python pre-commit.py
+          conda run -n aqm-eval --no-capture-output python pre-commit.py
