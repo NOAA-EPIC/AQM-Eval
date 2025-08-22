@@ -19,7 +19,7 @@ jobs:
       with:
         context: .
         push: false
-        tags: aqm-eval:${{ github.head_ref }}
+        tags: aqm-eval:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -28,5 +28,5 @@ jobs:
         docker run --rm \
           -v ${{ github.workspace }}:/workspace \
           -w /workspace \
-          aqm-eval:${{ github.ref }} \
+          aqm-eval:${{ github.sha }} \
           conda run -n aqm-eval --no-capture-output python pre-commit.py
