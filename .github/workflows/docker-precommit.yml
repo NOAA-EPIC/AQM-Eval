@@ -19,7 +19,7 @@ jobs:
       with:
         context: .
         push: false
-        tags: aqm-eval:${{ github.ref }}
+        tags: aqm-eval:${{ github.head_ref }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
