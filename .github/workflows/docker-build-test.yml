@@ -26,11 +26,11 @@ jobs:
 
     - name: Run pre-commit linting
       run: |
-        ls -alht ${{ github.workspace }} && docker run --rm \
+        docker run --rm \
           -v ${{ github.workspace }}:/workspace \
           -w /workspace \
           aqm-eval:${{ github.sha }} \
-          conda run -n aqm-eval --no-capture-output pre-commit run --all
+          conda run -n aqm-eval --no-capture-output pre-commit run --all || cat /root/.cache/pre-commit/pre-commit.log
 
     - name: Run pre-commit testing
       run: |
