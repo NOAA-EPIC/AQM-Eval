@@ -1,5 +1,3 @@
-#default_stages: [pre-push]
-
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: "v5.0.0"
@@ -9,18 +7,6 @@ repos:
       - id: check-docstring-first
       - id: check-yaml
       - id: check-added-large-files
-
-#  - repo: https://github.com/asottile/pyupgrade
-#    rev: "v3.20.0"
-#    hooks:
-#      - id: pyupgrade
-#        args: [--py36-plus]
-
-#  - repo: https://github.com/conda-incubator/conda-pre-commit
-#    rev: v0.3.0
-#    hooks:
-#      - id: conda-env-update
-#        args: [--file, environment.yml, --name, aqm-eval]
 
   - repo: local
     hooks:
@@ -57,12 +43,6 @@ repos:
         language: system
         stages: [manual]
         pass_filenames: false
-  # - repo: https://github.com/PlasmaFAIR/fortitude-pre-commit
-  #   # Fortitude version.
-  #   rev: v0.7.3
-  #   hooks:
-  #     - id: fortitude
-  #       args: ["--fix", "--unsafe-fixes", "--preview", "--ignore", "C121,S001"]
-  #       files: \.(f90|F90|f|F|for|FOR|f77|F77)$
+        always_run: true
 
 exclude: ^\.venv/

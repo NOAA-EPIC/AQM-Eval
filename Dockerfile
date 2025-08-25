@@ -9,5 +9,7 @@ COPY pyproject.toml /opt/build/pyproject.toml
 COPY src /opt/build/src
 WORKDIR /opt/build
 RUN conda run -n aqm-eval pip install .
+RUN aqm-data-sync --help
 
+WORKDIR /opt
 RUN rm -rf /opt/build
