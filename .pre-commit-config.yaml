@@ -33,10 +33,10 @@ repos:
 #      - id: mypy
 #        args: [--disallow-untyped-defs, --disallow-incomplete-defs, --check-untyped-defs, --install-types, --non-interactive]
 
-#  - repo: https://github.com/PyCQA/flake8
-#    rev: "7.3.0"
-#    hooks:
-#      - id: flake8
+  - repo: https://github.com/PyCQA/flake8
+    rev: "7.3.0"
+    hooks:
+      - id: flake8
 #        args: [--max-line-length=132]
   # - repo: https://github.com/PlasmaFAIR/fortitude-pre-commit
   #   # Fortitude version.

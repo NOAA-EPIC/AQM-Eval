@@ -10,4 +10,5 @@ dependencies:
   - awscli
   - black
   - mypy
+  - flake8
   - pre-commit
