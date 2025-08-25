@@ -52,9 +52,7 @@ def time_varying(
         "--last-cycle-date",
         help="Last cycle date in yyyymmdd format. If not provided, defaults to 24 hours after --first-cycle-date.",
     ),
-    use_case: UseCaseKey = typer.Option(
-        UseCaseKey.UNDEFINED, "--use-case", help="Use case."
-    ),
+    use_case: UseCaseKey = typer.Option(UseCaseKey.UNDEFINED, "--use-case", help="Use case."),
     max_concurrent_requests: int = typer.Option(
         _DEFAULT.max_concurrent_requests,
         _FLAG_NAME.max_concurrent_requests,

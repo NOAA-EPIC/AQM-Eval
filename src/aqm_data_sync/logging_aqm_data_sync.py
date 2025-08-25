@@ -1,7 +1,6 @@
 import logging
 import logging.config
 from enum import StrEnum, unique
-from typing import Literal
 
 _PROJECT_NAME = "aqm-data-sync"
 
@@ -59,8 +58,9 @@ class LoggerWrapper:
                 "plain": {
                     # pylint: disable=line-too-long
                     # Uncomment to report verbose output in logs; try to keep these two in sync
-                    # "format": f"[%(name)s][%(levelname)s][%(asctime)s][%(pathname)s:%(lineno)d][%(process)d][%(thread)d][rank={rank}]: %(message)s"
-                    "format": f"[%(name)s][%(levelname)s][%(asctime)s][%(filename)s:%(lineno)d][rank={rank}]: %(message)s"
+                    # "format": f"[%(name)s][%(levelname)s][%(asctime)s][%(pathname)s:%(lineno)d][%(process)d][%(thread)d][rank={rank}]: %(message)s" # noqa: E501
+                    "format": f"[%(name)s][%(levelname)s][%(asctime)s][%(filename)s:%(lineno)d][rank={rank}]: "
+                    f"%(message)s"
                     # pylint: enable=line-too-long
                 },
             },
@@ -75,9 +75,7 @@ class LoggerWrapper:
             "loggers": {
                 _PROJECT_NAME: {
                     "handlers": ["default"],
-                    "level": getattr(
-                        logging, log_level.value.upper()
-                    ),  # pylint: disable=no-member
+                    "level": getattr(logging, log_level.value.upper()),  # pylint: disable=no-member
                 },
             },
         }

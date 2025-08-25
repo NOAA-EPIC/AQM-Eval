@@ -27,9 +27,7 @@ class AbstractContext(ABC, BaseModel):
     @computed_field
     def system_max_concurrent_requests(self) -> int | None:
         try:
-            raw_output = subprocess.check_output(
-                ("aws", "configure", "get", "default.s3.max_concurrent_requests")
-            )
+            raw_output = subprocess.check_output(("aws", "configure", "get", "default.s3.max_concurrent_requests"))
         except subprocess.CalledProcessError:
             LOGGER("could not retrieve max_concurrent_requests", level=logging.WARNING)
             return None
@@ -182,28 +180,19 @@ class TimeVaryingSyncRunner(AbstractS3SyncRunner[TimeVaryingContext]):
             LOGGER(f"{ctr=}, {curr_cycle_date=}")
             if ctr > 1000:
                 LOGGER("", exc_info=ValueError(f"{ctr=} - Exceeded max iterations"))
-            include_templates = self._create_include_templates_for_cycle_date_(
-                curr_cycle_date
-            )
+            include_templates = self._create_include_templates_for_cycle_date_(curr_cycle_date)
             if ctr == 0:
                 LOGGER("adding restart file download")
-                include_templates.append(
-                    f"RESTART/*{restart_cycle_date.strftime('%Y%m%d')}*"
-                )
+                include_templates.append(f"RESTART/*{restart_cycle_date.strftime('%Y%m%d')}*")
             for it in include_templates:
                 cmd += ["--include", it]
-            if (
-                curr_cycle_date == self._ctx.last_cycle_date
-                or self._ctx.snippet is True
-            ):
+            if curr_cycle_date == self._ctx.last_cycle_date or self._ctx.snippet is True:
                 LOGGER("finished adding include filters")
                 break
             curr_cycle_date += datetime.timedelta(days=1)
             ctr += 1
 
-    def _create_include_templates_for_cycle_date_(
-        self, curr_cycle_date: datetime.datetime
-    ) -> list[str]:
+    def _create_include_templates_for_cycle_date_(self, curr_cycle_date: datetime.datetime) -> list[str]:
         curr_cycle_date_str = curr_cycle_date.strftime("%Y%m%d")
         include_templates = [
             f"GFS_SFC_DATA/gfs.{curr_cycle_date_str}/12/atmos/gfs.t12z.sfcanl.nc",
@@ -221,7 +210,5 @@ class TimeVaryingSyncRunner(AbstractS3SyncRunner[TimeVaryingContext]):
                 f"GFS_SFC_DATA/gfs.{curr_cycle_date_str}/12/atmos/gfs.t12z.sfcf{fhr:03}.nc",
             ]
         for fhr in range(self._ctx.fcst_hr, self._ctx.fcst_hr + 42, 6):
-            include_templates += [
-                f"GEFS_Aerosol/{curr_cycle_date_str}/00/gfs.t00z.atmf{fhr:03}.nemsio"
-            ]
+            include_templates += [f"GEFS_Aerosol/{curr_cycle_date_str}/00/gfs.t00z.atmf{fhr:03}.nemsio"]
         return include_templates
