@@ -13,11 +13,11 @@ conda run -n aqm-eval pip install .
 conda run -n aqm-eval pytest src/tes
 ```
 
-## aqm-data-sync Utility
+## _aqm-data-sync_ Utility
 
 A command line utility to synchronize AQM datasets. Currently, tuned to specialized use cases related to Short-Range Weather App use cases. Only S3 download is supported.
 
-## Usage
+### Usage
 
 ```shell
 aqm-data-sync --help
