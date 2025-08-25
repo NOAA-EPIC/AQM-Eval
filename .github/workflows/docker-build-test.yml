@@ -38,4 +38,4 @@ jobs:
           -v ${{ github.workspace }}:/workspace \
           -w /workspace \
           aqm-eval:${{ github.sha }} \
-          conda run -n aqm-eval --no-capture-output pre-commit run --hook-stage manual pytest
+          bash -c "git config --global --add safe.directory /workspace && conda run -n aqm-eval --no-capture-output pre-commit run --hook-stage manual pytest"
