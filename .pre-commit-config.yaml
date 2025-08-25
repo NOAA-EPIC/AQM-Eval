@@ -33,7 +33,8 @@ repos:
 
       - id: mypy
         name: mypy
-        entry: conda run -n aqm-eval mypy --disallow-untyped-defs --disallow-incomplete-defs --check-untyped-defs
+        entry: conda run -n aqm-eval mypy
+        args: [--disallow-untyped-defs, --disallow-incomplete-defs, --check-untyped-defs]
         language: system
         types: [python]
 
