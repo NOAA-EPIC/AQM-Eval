@@ -24,6 +24,7 @@ class LoggerWrapper:
     ) -> None:
         """
         Log a message.
+
         Args:
             msg: The message to log.
             level: An optional override for the message level.
