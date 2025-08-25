@@ -7,11 +7,33 @@ _PROJECT_NAME = "aqm-eval"
 
 @unique
 class LogLevel(StrEnum):
+    """Log level enum.
+
+    Attributes
+    ----------
+    INFO : str
+        Equivalent to `logging.INFO`.
+    DEBUG : str
+        Equivalent to `logging.DEBUG`.
+    """
+
     INFO = "info"
     DEBUG = "debug"
 
 
 class LoggerWrapper:
+    """Wrapper for logging functionality.
+
+    Provides a convenient interface for logging with configurable behavior.
+
+    Attributes
+    ----------
+    logger : logging.Logger | None
+        The underlying logger instance. If `None`, the logger is not initialized.
+    exit_on_error : bool
+        Whether to exit on error or log exception information and continue execution.
+    """
+
     logger: logging.Logger | None = None
     exit_on_error: bool = True
 
@@ -22,16 +44,20 @@ class LoggerWrapper:
         exc_info: Exception | None = None,
         stacklevel: int = 2,
     ) -> None:
-        """
-        Log a message.
+        """Log a message.
 
-        Args:
-            msg: The message to log.
-            level: An optional override for the message level.
-            exc_info: If provided, log this exception and raise an error if `self.exit_on_error`
-                is `True`.
-            stacklevel: If greater than 1, the corresponding number of stack frames are skipped
-                when computing the line number and function name.
+        Parameters
+        ----------
+        msg : str
+            The message to log.
+        level : int, optional
+            An optional override for the message level.
+        exc_info : Exception | None, optional
+            If provided, log this exception and raise an error if `self.exit_on_error`
+            is `True`.
+        stacklevel : int, optional
+            If greater than 1, the corresponding number of stack frames are skipped
+            when computing the line number and function name.
         """
         if exc_info is not None:
             level = logging.ERROR
@@ -46,6 +72,19 @@ class LoggerWrapper:
         rank: int = 0,
         again: bool = False,
     ) -> None:
+        """Initialize the logger.
+
+        Parameters
+        ----------
+        log_level : LogLevel, optional
+            The logging level to use.
+        exit_on_error : bool, optional
+            Whether to exit on error conditions.
+        rank : int, optional
+            Rank identifier for MPI-based logging.
+        again : bool, optional
+            Whether to allow re-initialization.
+        """
         if self.logger is not None and not again:
             raise RuntimeError("logger already initialized and again is False")
         self.exit_on_error = exit_on_error
