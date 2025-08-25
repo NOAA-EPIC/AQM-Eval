@@ -1,3 +1,8 @@
+"""Command-line interface for AQM data synchronization.
+
+Provides commands for downloading various datasets for UFS-AQM.
+"""
+
 import os
 from pathlib import Path
 
@@ -17,25 +22,25 @@ os.environ["NO_COLOR"] = "1"
 app = typer.Typer(pretty_exceptions_enable=False)
 
 
-class HelpMessage(BaseModel):
+class _HelpMessage(BaseModel):
     dst_dir: str = "Destination directory for sync."
     max_concurrent_requests: str = "Maximum number of concurrent requests."
     dry_run: str = "Dry run. Nothing will be materially synchronized."
 
 
-class DefaultValue(BaseModel):
+class _DefaultValue(BaseModel):
     max_concurrent_requests: int = 5
 
 
-class FlagName(BaseModel):
+class _FlagName(BaseModel):
     dst_dir: str = "--dst-dir"
     dry_run: str = "--dry-run"
     max_concurrent_requests: str = "--max-concurrent-requests"
 
 
-_HELP = HelpMessage()
-_DEFAULT = DefaultValue()
-_FLAG_NAME = FlagName()
+_HELP = _HelpMessage()
+_DEFAULT = _DefaultValue()
+_FLAG_NAME = _FlagName()
 
 
 @app.command(name="time-varying", help="Download time varying input data for UFS-AQM.")
@@ -65,6 +70,7 @@ def time_varying(
         help="If provided, download data for a single forecast cycle loop (e.g. one day).",
     ),
 ) -> None:
+    """Download time-varying input data for UFS-AQM. See help messages for parameter documentation."""
     kwds = dict(
         first_cycle_date=first_cycle_date,
         dst_dir=dst_dir,
@@ -92,6 +98,7 @@ def srw_fixed(
     ),
     dry_run: bool = typer.Option(False, _FLAG_NAME.dry_run, help=_HELP.dry_run),
 ) -> None:
+    """Download SRW fixed data. See help messages for parameter documentation."""
     kwds = dict(
         dst_dir=dst_dir,
         max_concurrent_requests=max_concurrent_requests,

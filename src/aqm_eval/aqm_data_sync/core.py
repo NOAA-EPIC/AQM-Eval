@@ -2,8 +2,8 @@ import datetime
 import logging
 import subprocess
 from abc import ABC, abstractmethod
-from pathlib import Path
 from enum import StrEnum, unique
+from pathlib import Path
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, computed_field, model_validator
@@ -18,8 +18,6 @@ class UseCaseKey(StrEnum):
 
 
 class AbstractContext(ABC, BaseModel):
-    """is this bad?"""
-
     model_config = {"frozen": True}
     dst_dir: Path
     s3_root: str = "s3://noaa-ufs-srw-pds"
