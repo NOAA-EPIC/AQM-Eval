@@ -7,8 +7,6 @@ _PROJECT_NAME = "aqm-eval"
 
 @unique
 class LogLevel(StrEnum):
-    """Logging level for the preprocessor."""
-
     INFO = "info"
     DEBUG = "debug"
 
