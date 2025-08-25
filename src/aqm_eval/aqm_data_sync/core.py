@@ -18,6 +18,8 @@ class UseCaseKey(StrEnum):
 
 
 class AbstractContext(ABC, BaseModel):
+    """is this bad?"""
+
     model_config = {"frozen": True}
     dst_dir: Path
     s3_root: str = "s3://noaa-ufs-srw-pds"

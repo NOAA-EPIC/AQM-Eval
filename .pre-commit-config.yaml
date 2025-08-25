@@ -16,6 +16,12 @@ repos:
         language: system
         types: [python]
 
+      - id: ruff-check
+        name: ruff check
+        entry: conda run -n aqm-eval ruff check
+        language: system
+        types: [python]
+
       - id: mypy
         name: mypy
         entry: conda run -n aqm-eval mypy
