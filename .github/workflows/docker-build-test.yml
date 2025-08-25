@@ -26,7 +26,7 @@ jobs:
 
     - name: Run pre-commit linting
       run: |
-        docker run --rm \
+        ls -alht ${{ github.workspace }} && docker run --rm \
           -v ${{ github.workspace }}:/workspace \
           -w /workspace \
           aqm-eval:${{ github.sha }} \

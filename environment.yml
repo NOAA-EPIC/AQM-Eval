@@ -11,4 +11,5 @@ dependencies:
   - black
   - mypy
   - flake8
+  - isort
   - pre-commit
