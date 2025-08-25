@@ -29,4 +29,4 @@ def test_time_varying_use_case(tmp_path: Path) -> None:
     ]
     result = runner.invoke(app, args, catch_exceptions=False)
     print(result.output)
-    assert result.exit_code == 1
+    assert result.exit_code == 0
