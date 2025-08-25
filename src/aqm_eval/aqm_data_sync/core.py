@@ -2,6 +2,7 @@
 
 Provides context classes and runners for synchronizing UFS-AQM data from S3.
 """
+
 import datetime
 import logging
 import subprocess
@@ -17,8 +18,8 @@ from aqm_eval.logging_aqm_eval import LOGGER
 
 @unique
 class UseCaseKey(StrEnum):
-    """Enumeration of available use cases.
-    
+    """Enumeration of available use cases. A "use case" provides a set of pre-defined parameters for data synchronization.
+
     Attributes
     ----------
     UNDEFINED : str
@@ -26,13 +27,14 @@ class UseCaseKey(StrEnum):
     AEROMMA : str
         AEROMMA field campaign use case.
     """
+
     UNDEFINED = "UNDEFINED"
     AEROMMA = "AEROMMA"
 
 
 class AbstractContext(ABC, BaseModel):
     """Abstract base class for synchronization contexts.
-    
+
     Attributes
     ----------
     dst_dir : Path
@@ -44,6 +46,7 @@ class AbstractContext(ABC, BaseModel):
     dry_run : bool
         Whether to perform a dry run. If `True`, no data is moved.
     """
+
     model_config = {"frozen": True}
     dst_dir: Path
     s3_root: str = "s3://noaa-ufs-srw-pds"
@@ -53,7 +56,7 @@ class AbstractContext(ABC, BaseModel):
     @computed_field
     def system_max_concurrent_requests(self) -> int | None:
         """Get system AWS max concurrent requests setting.
-        
+
         Returns
         -------
         int | None
@@ -70,18 +73,19 @@ class AbstractContext(ABC, BaseModel):
 
 class SRWFixedContext(AbstractContext):
     """Context for SRW fixed data synchronization.
-    
+
     Attributes
     ----------
     s3_root : str
         S3 root path for SRW fixed data.
     """
+
     s3_root: str = "s3://noaa-ufs-srw-pds/develop-20250702"
 
 
 class TimeVaryingContext(AbstractContext):
     """Context for time-varying data synchronization.
-    
+
     Attributes
     ----------
     first_cycle_date : datetime.datetime
@@ -95,6 +99,7 @@ class TimeVaryingContext(AbstractContext):
     snippet : bool
         Whether to download only a snippet. If `True`, the first time coordinate is synchronized.
     """
+
     first_cycle_date: datetime.datetime
     fcst_hr: int = 0
     last_cycle_date: datetime.datetime
@@ -120,12 +125,13 @@ class TimeVaryingContext(AbstractContext):
 
 class UseCase(TimeVaryingContext):
     """Use case configuration for data synchronization.
-    
+
     Attributes
     ----------
     key : UseCaseKey
         Use case identifier.
     """
+
     key: UseCaseKey
 
     @classmethod
@@ -135,14 +141,14 @@ class UseCase(TimeVaryingContext):
         **kwargs: Any,
     ) -> "UseCase":
         """Create UseCase instance.
-        
+
         Parameters
         ----------
         key : UseCaseKey
             Use case identifier.
         **kwargs : Any
             Additional keyword arguments passed to the initializer.
-            
+
         Returns
         -------
         UseCase
@@ -160,7 +166,7 @@ class UseCase(TimeVaryingContext):
 
 class UseCaseAeromma(UseCase):
     """AEROMMA field campaign use case configuration.
-    
+
     Attributes
     ----------
     key : UseCaseKey
@@ -170,6 +176,7 @@ class UseCaseAeromma(UseCase):
     last_cycle_date : datetime.datetime
         Campaign end date.
     """
+
     key: UseCaseKey = UseCaseKey.AEROMMA
     first_cycle_date: datetime.datetime = datetime.datetime(2023, 6, 1, hour=12)
     last_cycle_date: datetime.datetime = datetime.datetime(2023, 8, 31, hour=12)
@@ -189,20 +196,20 @@ T = TypeVar("T", bound=AbstractContext)
 
 class AbstractS3SyncRunner(ABC, Generic[T]):
     """Abstract base class for S3 synchronization runners.
-    
+
     Parameters
     ----------
     T : bound=AbstractContext
         Context type for the sync runner.
     """
-    
+
     def __init__(self, context: T) -> None:
-        """Initialize sync runner with context.
-        
+        """Initialize the abstract runner.
+
         Parameters
         ----------
         context : T
-            Sync context configuration.
+            Synchronization context.
         """
         self._ctx = context
 
@@ -269,12 +276,14 @@ class AbstractS3SyncRunner(ABC, Generic[T]):
 
 class SRWFixedSyncRunner(AbstractS3SyncRunner[SRWFixedContext]):
     """Synchronization runner for SRW fixed data."""
+
     def _update_include_templates_(self, cmd: list[str]) -> None:
         cmd += ["--include", "fix/*", "--include", "NaturalEarth/*"]
 
 
 class TimeVaryingSyncRunner(AbstractS3SyncRunner[TimeVaryingContext]):
     """Synchronization runner for time-varying data."""
+
     def _update_include_templates_(self, cmd: list[str]) -> None:
         restart_cycle_date = self._ctx.first_cycle_date - datetime.timedelta(days=1)
         curr_cycle_date = self._ctx.first_cycle_date
