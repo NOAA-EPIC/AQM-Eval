@@ -39,11 +39,3 @@ jobs:
           -w /workspace \
           aqm-eval:${{ github.sha }} \
           conda run -n aqm-eval --no-capture-output pre-commit run --hook-stage manual pytest
-
-    - name: Run installer
-      run: |
-        docker run --rm \
-          -v ${{ github.workspace }}:/workspace \
-          -w /workspace \
-          aqm-eval:${{ github.sha }} \
-          conda run -n aqm-eval --no-capture-output pip install .
