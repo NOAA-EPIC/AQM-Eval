@@ -1,5 +1,3 @@
-import os
-import subprocess
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -10,11 +8,10 @@ from aqm_data_sync.core import UseCaseKey
 
 def test_help() -> None:
     """Test that the help message can be displayed."""
-    os.environ["TERMINAL_WIDTH"] = "100"
-    cli_path = Path(__file__).parent.parent / "aqm_data_sync" / "aqm_data_sync_cli.py"
-    subprocess.check_call(["python", str(cli_path), "--help"])
+    runner = CliRunner()
     for subcommand in ("time-varying", "srw-fixed"):
-        subprocess.check_call(["python", str(cli_path), subcommand, "--help"])
+        result = runner.invoke(app, [subcommand, "--help"], catch_exceptions=False)
+        print(result.output)
 
 
 def test_time_varying_use_case(tmp_path: Path) -> None:

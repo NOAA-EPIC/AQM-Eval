@@ -24,10 +24,26 @@ jobs:
         cache-to: type=gha,mode=max
         load: true
 
-    - name: Run pre-commit script with source code
+    - name: Run pre-commit linting
       run: |
         docker run --rm \
           -v ${{ github.workspace }}:/workspace \
           -w /workspace \
           aqm-eval:${{ github.sha }} \
-          conda run -n aqm-eval --no-capture-output python pre-commit.py
+          conda run -n aqm-eval --no-capture-output pre-commit run --all
+
+    - name: Run pre-commit testing
+      run: |
+        docker run --rm \
+          -v ${{ github.workspace }}:/workspace \
+          -w /workspace \
+          aqm-eval:${{ github.sha }} \
+          conda run -n aqm-eval --no-capture-output pre-commit run --hook-stage manual pytest
+
+    - name: Run installer
+      run: |
+        docker run --rm \
+          -v ${{ github.workspace }}:/workspace \
+          -w /workspace \
+          aqm-eval:${{ github.sha }} \
+          conda run -n aqm-eval --no-capture-output pip install .

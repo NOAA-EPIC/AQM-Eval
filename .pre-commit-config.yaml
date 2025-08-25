@@ -50,6 +50,13 @@ repos:
         entry: conda run -n aqm-eval mypy --disallow-untyped-defs --disallow-incomplete-defs --check-untyped-defs
         language: system
         types: [python]
+
+      - id: pytest
+        name: pytest
+        entry: conda run -n aqm-eval pytest src/test
+        language: system
+        stages: [manual]
+        pass_filenames: false
   # - repo: https://github.com/PlasmaFAIR/fortitude-pre-commit
   #   # Fortitude version.
   #   rev: v0.7.3
