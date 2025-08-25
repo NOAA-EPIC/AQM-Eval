@@ -1,3 +1,5 @@
+"""A centralized logging system with configurable behavior."""
+
 import logging
 import logging.config
 from enum import StrEnum, unique
@@ -7,7 +9,7 @@ _PROJECT_NAME = "aqm-eval"
 
 @unique
 class LogLevel(StrEnum):
-    """Log level enum.
+    """Log level enum. Used to wrap standard `logging` levels.
 
     Attributes
     ----------
