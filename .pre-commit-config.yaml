@@ -10,26 +10,11 @@ repos:
 
   - repo: local
     hooks:
-      - id: isort
-        name: isort
-        entry: conda run -n aqm-eval isort
+      - id: ruff-format
+        name: ruff format
+        entry: conda run -n aqm-eval ruff format
         language: system
         types: [python]
-        args: [--profile=black, --line-length=132]
-
-      - id: black
-        name: black
-        entry: conda run -n aqm-eval black
-        language: system
-        types: [python]
-        args: [--line-length=132]
-
-      - id: flake8
-        name: flake8
-        entry: conda run -n aqm-eval flake8
-        language: system
-        types: [python]
-        args: [--max-line-length=132]
 
       - id: mypy
         name: mypy

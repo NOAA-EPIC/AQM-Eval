@@ -2,8 +2,8 @@ import datetime
 import logging
 import subprocess
 from abc import ABC, abstractmethod
-from enum import StrEnum, unique
 from pathlib import Path
+from enum import StrEnum, unique
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, computed_field, model_validator
@@ -101,7 +101,6 @@ T = TypeVar("T", bound=AbstractContext)
 
 
 class AbstractS3SyncRunner(ABC, Generic[T]):
-
     def __init__(self, context: T) -> None:
         self._ctx = context
 
@@ -165,13 +164,11 @@ class AbstractS3SyncRunner(ABC, Generic[T]):
 
 
 class SRWFixedSyncRunner(AbstractS3SyncRunner[SRWFixedContext]):
-
     def _update_include_templates_(self, cmd: list[str]) -> None:
         cmd += ["--include", "fix/*", "--include", "NaturalEarth/*"]
 
 
 class TimeVaryingSyncRunner(AbstractS3SyncRunner[TimeVaryingContext]):
-
     def _update_include_templates_(self, cmd: list[str]) -> None:
         restart_cycle_date = self._ctx.first_cycle_date - datetime.timedelta(days=1)
         curr_cycle_date = self._ctx.first_cycle_date

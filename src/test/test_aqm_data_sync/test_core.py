@@ -12,7 +12,6 @@ from aqm_eval.aqm_data_sync.core import (
 
 
 class TestTimeVaryingSyncRunner:
-
     def test_happy_path(self, tmp_path: Path) -> None:
         """Test a dry run with a single forecast date."""
         first_cycle_date = "2023060112"
@@ -174,7 +173,6 @@ class TestTimeVaryingSyncRunner:
 
 
 class TestUseCase:
-
     def test_from_key(self, tmp_path: Path) -> None:
         """Test creating a use case context object."""
         use_case = UseCase.from_key(UseCaseKey.AEROMMA, dst_dir=tmp_path)
@@ -183,7 +181,6 @@ class TestUseCase:
 
 
 class TestSRWFixedSyncRunner:
-
     def test_create_sync_command(self, tmp_path: Path) -> None:
         """Test an exact match for the AWS S3 sync command."""
         dst_dir = tmp_path / "output-for-this-test"
