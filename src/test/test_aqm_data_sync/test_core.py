@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from aqm_data_sync.core import (
+from aqm_eval.aqm_data_sync.core import (
     SRWFixedContext,
     SRWFixedSyncRunner,
     TimeVaryingContext,

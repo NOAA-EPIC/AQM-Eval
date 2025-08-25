@@ -2,8 +2,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from aqm_data_sync.aqm_data_sync_cli import app
-from aqm_data_sync.core import UseCaseKey
+from aqm_eval.aqm_data_sync.aqm_data_sync_cli import app
+from aqm_eval.aqm_data_sync.core import UseCaseKey
 
 
 def test_help() -> None:

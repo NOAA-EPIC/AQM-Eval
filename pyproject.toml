@@ -9,4 +9,4 @@ authors = [
 ]
 
 [project.scripts]
-aqm-data-sync = "aqm_data_sync.aqm_data_sync_cli:app"
+aqm-data-sync = "aqm_eval.aqm_data_sync.aqm_data_sync_cli:app"

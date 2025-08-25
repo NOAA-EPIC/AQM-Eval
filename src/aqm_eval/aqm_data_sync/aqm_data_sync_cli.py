@@ -4,7 +4,7 @@ from pathlib import Path
 import typer
 from pydantic import BaseModel
 
-from aqm_data_sync.core import (
+from aqm_eval.aqm_data_sync.core import (
     SRWFixedContext,
     SRWFixedSyncRunner,
     TimeVaryingContext,

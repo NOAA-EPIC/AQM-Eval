@@ -8,7 +8,7 @@ from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, computed_field, model_validator
 
-from aqm_data_sync.logging_aqm_data_sync import LOGGER
+from aqm_eval.logging_aqm_eval import LOGGER
 
 
 @unique
