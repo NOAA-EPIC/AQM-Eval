@@ -1,0 +1,55 @@
+#!/bin/sh --login
+# This template is used to generate pg8_csi_rename.
+
+cd {{ rename_dir }}
+
+date1={{ rename_date1 }}
+date2={{ rename_date2 }}
+
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.all.CONUS.Hit Rate.png' pg8.csi.OZONE.${date1}.${date2}.all.CONUS.Hit_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R10.Hit Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R10.Hit_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R1.Hit Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R1.Hit_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R2.Hit Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R2.Hit_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R3.Hit Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R3.Hit_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R4.Hit Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R4.Hit_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R5.Hit Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R5.Hit_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R6.Hit Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R6.Hit_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R7.Hit Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R7.Hit_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R8.Hit Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R8.Hit_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R9.Hit Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R9.Hit_Rate.png
+
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.all.CONUS.Hit Rate.png' pg8.csi.PM2.5.${date1}.${date2}.all.CONUS.Hit_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R10.Hit Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R10.Hit_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R1.Hit Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R1.Hit_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R2.Hit Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R2.Hit_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R3.Hit Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R3.Hit_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R4.Hit Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R4.Hit_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R5.Hit Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R5.Hit_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R6.Hit Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R6.Hit_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R7.Hit Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R7.Hit_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R8.Hit Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R8.Hit_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R9.Hit Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R9.Hit_Rate.png
+
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.all.CONUS.Hit Rate.png' pg8.csi.CO.${date1}.${date2}.all.CONUS.Hit_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R10.Hit Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R10.Hit_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R1.Hit Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R1.Hit_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R2.Hit Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R2.Hit_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R3.Hit Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R3.Hit_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R4.Hit Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R4.Hit_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R5.Hit Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R5.Hit_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R6.Hit Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R6.Hit_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R7.Hit Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R7.Hit_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R8.Hit Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R8.Hit_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R9.Hit Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R9.Hit_Rate.png
+
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.all.CONUS.Hit Rate.png' pg8.csi.NO2.${date1}.${date2}.all.CONUS.Hit_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R10.Hit Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R10.Hit_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R1.Hit Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R1.Hit_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R2.Hit Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R2.Hit_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R3.Hit Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R3.Hit_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R4.Hit Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R4.Hit_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R5.Hit Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R5.Hit_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R6.Hit Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R6.Hit_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R7.Hit Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R7.Hit_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R8.Hit Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R8.Hit_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R9.Hit Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R9.Hit_Rate.png

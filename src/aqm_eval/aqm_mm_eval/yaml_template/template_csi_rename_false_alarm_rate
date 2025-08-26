@@ -1,0 +1,55 @@
+#!/bin/sh --login
+# This template is used to generate pg8_csi_rename.
+
+cd {{ rename_dir }}
+
+date1={{ rename_date1 }}
+date2={{ rename_date2 }}
+
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.all.CONUS.False Alarm Rate.png' pg8.csi.OZONE.${date1}.${date2}.all.CONUS.False_Alarm_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R10.False Alarm Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R10.False_Alarm_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R1.False Alarm Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R1.False_Alarm_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R2.False Alarm Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R2.False_Alarm_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R3.False Alarm Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R3.False_Alarm_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R4.False Alarm Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R4.False_Alarm_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R5.False Alarm Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R5.False_Alarm_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R6.False Alarm Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R6.False_Alarm_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R7.False Alarm Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R7.False_Alarm_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R8.False Alarm Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R8.False_Alarm_Rate.png
+mv 'pg8.csi.OZONE.'${date1}'.'${date2}'.epa_region.R9.False Alarm Rate.png' pg8.csi.OZONE.${date1}.${date2}.epa_region.R9.False_Alarm_Rate.png
+
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.all.CONUS.False Alarm Rate.png' pg8.csi.PM2.5.${date1}.${date2}.all.CONUS.False_Alarm_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R10.False Alarm Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R10.False_Alarm_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R1.False Alarm Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R1.False_Alarm_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R2.False Alarm Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R2.False_Alarm_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R3.False Alarm Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R3.False_Alarm_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R4.False Alarm Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R4.False_Alarm_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R5.False Alarm Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R5.False_Alarm_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R6.False Alarm Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R6.False_Alarm_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R7.False Alarm Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R7.False_Alarm_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R8.False Alarm Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R8.False_Alarm_Rate.png
+mv 'pg8.csi.PM2.5.'${date1}'.'${date2}'.epa_region.R9.False Alarm Rate.png' pg8.csi.PM2.5.${date1}.${date2}.epa_region.R9.False_Alarm_Rate.png
+
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.all.CONUS.False Alarm Rate.png' pg8.csi.CO.${date1}.${date2}.all.CONUS.False_Alarm_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R10.False Alarm Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R10.False_Alarm_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R1.False Alarm Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R1.False_Alarm_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R2.False Alarm Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R2.False_Alarm_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R3.False Alarm Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R3.False_Alarm_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R4.False Alarm Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R4.False_Alarm_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R5.False Alarm Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R5.False_Alarm_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R6.False Alarm Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R6.False_Alarm_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R7.False Alarm Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R7.False_Alarm_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R8.False Alarm Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R8.False_Alarm_Rate.png
+mv 'pg8.csi.CO.'${date1}'.'${date2}'.epa_region.R9.False Alarm Rate.png' pg8.csi.CO.${date1}.${date2}.epa_region.R9.False_Alarm_Rate.png
+
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.all.CONUS.False Alarm Rate.png' pg8.csi.NO2.${date1}.${date2}.all.CONUS.False_Alarm_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R10.False Alarm Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R10.False_Alarm_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R1.False Alarm Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R1.False_Alarm_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R2.False Alarm Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R2.False_Alarm_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R3.False Alarm Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R3.False_Alarm_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R4.False Alarm Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R4.False_Alarm_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R5.False Alarm Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R5.False_Alarm_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R6.False Alarm Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R6.False_Alarm_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R7.False Alarm Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R7.False_Alarm_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R8.False Alarm Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R8.False_Alarm_Rate.png
+mv 'pg8.csi.NO2.'${date1}'.'${date2}'.epa_region.R9.False Alarm Rate.png' pg8.csi.NO2.${date1}.${date2}.epa_region.R9.False_Alarm_Rate.png

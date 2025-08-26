@@ -1,0 +1,218 @@
+# Please use this namelist script for MM settings. 13 plot/analysis options are included: save_paired, timeseries, taylor, spatial_bias, spatial_overlay, boxplot, multi_boxplot, scorecard_rmse, scorecard_ioa, scorecard_nmb, scorecard_nme, csi, and stats. 
+# For AQMv8 evaluation, two models (base, eval) and airnow observation are used by default.
+# Any key that is specific for a plot type will begin with ts for timeseries, ty for taylor
+# Opt: Specifying the variable or variable group is optional
+# For now all plots except time series average over the analysis window.
+# Seting axis values - If set_axis = True in data_proc section of each plot_grp the yaxis for the plot will be set based on the values specified in the obs section for each variable. If set_axis is set to False, then defaults will be used. 'vmin_plot' and 'vmax_plot' are needed for 'timeseries', 'spatial_overlay', and 'boxplot'. 'vdiff_plot' is needed for 'spatial_bias' plots and'ty_scale' is needed for 'taylor' plots. 'nlevels' or the number of levels used in the contour plot can also optionally be provided for spatial_overlay plot. If set_axis = True and the proper limits are not provided in the obs section, a warning will print, and the plot will be created using the default limits.
+
+# ==== General settings ====
+# For MM yamls
+# Time format: yyyy-mm-dd-HH:MM:SS UTC
+start_time: '"2023-06-01-12:00:00"'
+end_time: '"2023-06-02-12:00:00"'
+output_dir: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/output
+debug_option: False
+mm_tasks: [
+  "save_paired", "timeseries", "taylor",
+  "spatial_bias", "spatial_overlay",
+  "boxplot", "stats",
+]
+# For link_dyns_to_Alldays and phy_conv
+link_simulation: "202306*/"
+link_Alldays_path: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/Alldays
+#link_base_path: /gpfs/f6/bil-fire3/scratch/Patrick.C.Campbell/expt_dirs/aqmv8p1_testbed_AQMNA13km_warmstart_Feb2024
+#link_base_predix: '"aqmv8p1.dyn"'
+#link_base_target: '"dyn"'
+#link_base_ish: '"aqmv8p1.ish"'
+link_eval_path: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/sandbox/srw/benkozi/aqm-reldeb/expt_dirs/aqm_AQMNA13km_AEROMMA
+link_eval_predix: '"dyn"'
+link_eval_target: '"dyn"'
+link_eval_ish: '"metemis.ish"'
+# For pg8_csi_rename
+rename_dir: "/gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/output"
+rename_date1: '"2023-06-01_12"'
+rename_date2: '"2023-06-02_12"'
+
+
+# ==== Paired file ====
+paired_format: '"netcdf"'
+paired_predix: "~"
+paired_save_data: '"all"'
+paired_dataset: 
+  eval_aqm: "ish_eval_aqm.nc4"
+#  ish_eval_aqmv8p1_metemis: "ish_eval_aqmv8p1_metemis.nc4"
+
+
+# ==== Model - base ====
+#model_base_label: base_aqmv8p1
+#model_base_files: /gpfs/f6/bil-fire3/scratch/Patrick.C.Campbell/MM-analysis/aqmv8p1_metemis/Alldays/aqmv8p1.ish_202402*.nc
+#model_base_type: '"rrfs"'
+#model_base_kwargs:
+#  surf_only: True
+#  mech: "cb6r3_ae6_aq"
+#model_base_radius: 19500
+#model_base_mapping:
+#  tmp2m: "temp"
+#  ws10m: "ws"
+#  dew_temp: "dew_pt_temp"
+#model_base_variables:
+#  tmp2m:
+#    unit_scale: 273.15   # K -> C
+#    unit_scale_method: "-"
+#model_base_projection: "~"
+#model_base_plot_kwargs:
+#  color: "magenta"
+#  marker: "o"
+#  linestyle: "-"
+#  markersize: 4
+
+
+# ==== Model - eval ====
+model_eval_label: eval_aqm
+model_eval_files: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/Alldays/*.nc
+model_eval_type: '"rrfs"'
+model_eval_kwargs: 
+  surf_only: True
+  mech: "cb6r3_ae6_aq"
+model_eval_radius: 19500
+model_eval_mapping:
+  tmp2m: "temp"
+  ws10m: "ws"
+  dew_temp: "dew_pt_temp"
+model_eval_variables:
+  tmp2m: 
+    unit_scale: 273.15   # K -> C
+    unit_scale_method: "-"
+model_eval_projection: "~"
+model_eval_plot_kwargs:
+  color: "forestgreen"
+  marker: "^"
+  linestyle: "-"
+  markersize: 4
+
+
+# ==== Obs (ISH by default) ====
+obs_label: ish
+obs_file: /gpfs/f6/bil-fire3/world-shared/Observations/ISH/ISH-Lite_US_20230601_20230701.nc
+obs_variables:
+  ws:
+    unit_scale: 1    # use 0.514 when convert obs knots-->m/s
+    unit_scale_method: "*"  # Multiply = '*' , Add = '+', subtract = '-', divide = '/'
+    nan_value: -1.0
+    obs_min: 0.2 # m/s
+    ylabel_plot: "WS10 (m/s)"
+    ty_scale: 0.5
+    vmin_plot: 1.0
+    vmax_plot: 6.0
+  press:
+    unit_scale: 1  
+    unit_scale_method: "*"  # Multiply = '*' , Add = '+', subtract = '-', divide = '/'
+    nan_value: -1.0
+    ylabel_plot: "PRESSFC (mbar)"
+    ty_scale: 0.5
+    vmin_plot: 800
+    vmax_plot: 1100
+  temp:
+    unit_scale: 1.0
+    unit_scale_method: "*"
+    nan_value: -1.0
+    ylabel_plot: "T2 (degree C)"
+    ty_scale: 3.0
+    vmin_plot: 0.0
+    vmax_plot: 40.0
+  dew_pt_temp:
+    unit_scale: 1.0
+    unit_scale_method: "*"
+    nan_value: -1.0
+    ylabel_plot: "TD2 (degree C)"
+    ty_scale: 8.0
+    vmin_plot: 0.0
+    vmax_plot: 40.0
+
+
+# ==== pg1 - timeseries ====
+timeseries_fig_kwargs:
+  figsize: [12, 6]
+timeseries_plot_kwargs: 
+  linewidth: 2.0
+  markersize: 10
+timeseries_text_kwargs:
+  fontsize: 24
+timeseries_domain_type: ["country"]
+timeseries_domain_name: ["US"]
+timeseries_dataset: ["eval_aqm"]
+timeseries_data_proc:
+  rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.
+  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.
+  ts_select_time: "time_local"  # Options: 'time' for UTC or 'time_local' for LT
+  ts_avg_window: "H"  # None for no averaging, pandas resample rule (e.g., 'H', 'D')
+
+
+# ==== pg2 - taylor ====
+taylor_fig_kwargs:
+  figsize: [8, 8]
+taylor_plot_kwargs:
+  markersize: 10
+taylor_text_kwargs:
+  fontsize: 24
+taylor_domain_type: ["country"]
+taylor_domain_name: ["US"]
+taylor_dataset: ["eval_aqm"]
+taylor_data_proc:
+  rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.
+  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.
+
+
+# ==== pg3 - spatial_bias ==== 
+spatial_bias_fig_kwargs:
+  states: True
+  figsize: [10, 5]
+spatial_bias_text_kwargs:
+  fontsize: 24
+spatial_bias_domain_type: ["country"]
+spatial_bias_domain_name: ["US"]
+spatial_bias_dataset: ["eval_aqm"]
+spatial_bias_data_proc:
+  rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.
+  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.
+
+
+# ==== pg4 - spatial_overlay ====
+spatial_overlay_fig_kwargs:
+  states: True
+  figsize: [10, 5]
+spatial_overlay_text_kwargs:
+  fontsize: 24
+spatial_overlay_domain_type: ["country"]
+spatial_overlay_domain_name: ["US"]
+spatial_overlay_dataset: ["eval_aqm"]
+spatial_overlay_data_proc:
+  rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.
+  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.
+
+
+# ==== pg5 - boxplot ====
+boxplot_fig_kwargs:
+  figsize: [8, 6]
+boxplot_text_kwargs:
+  fontsize: 24
+boxplot_domain_type: ["country"]
+boxplot_domain_name: ["US"]
+boxplot_dataset: ["eval_aqm"]
+boxplot_data_proc:
+  rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.
+  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.
+
+
+# ==== Stats ====
+stats_score_list: ["MB", "MdnB", "NMB", "NMdnB", "ME", "MdnE", "NME", "NMdnE", "IOA", "R2", "RMSE", "AC"]
+stats_table_option: False
+stats_table_kwargs:
+  figsize: [7, 3]
+  fontsize: 12.
+  xscale: 1.4
+  yscale: 1.4
+  edges: "horizontal"
+stats_domain_type: ["country"]
+stats_domain_name: ["US"]
+stats_dataset: ["eval_aqm"]

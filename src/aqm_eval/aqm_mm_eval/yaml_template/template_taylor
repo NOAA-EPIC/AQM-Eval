@@ -1,0 +1,40 @@
+# This template is used to generate control_taylor.yaml for MM application. Airnow surface observation is set as default.  
+analysis:
+  start_time: {{ start_time }} # yyyy-mm-dd-HH:MM:SS UTC
+  end_time: {{ end_time }} # yyyy-mm-dd-HH:MM:SS UTC
+  output_dir: {{ output_dir }}
+  debug: {{ debug_option }}
+  read:
+    paired:
+      method: {{ paired_format }}
+      filenames: {{ paired_dataset }}
+
+model:
+  {{ model_eval_label }}: # model label
+   files: {{ model_eval_files }}
+   mod_type: {{ model_eval_type }}
+   mod_kwargs: {{ model_eval_kwargs }}
+   radius_of_influence: {{ model_eval_radius}}
+   mapping:
+     {{ obs_label }}: {{ model_eval_mapping }}
+   variables: {{ model_eval_variables }}
+   projection: {{ model_eval_projection }}
+   plot_kwargs: {{ model_eval_plot_kwargs }}
+
+obs:
+  {{ obs_label }}: # obs label
+    use_airnow: True
+    filename: {{ obs_file }}
+    obs_type: pt_sfc
+    variables: {{ obs_variables }}
+
+plots:
+  pg2:
+    type: "taylor"
+    fig_kwargs: {{ taylor_fig_kwargs }}
+    default_plot_kwargs: {{ taylor_plot_kwargs }}
+    text_kwargs: {{ taylor_text_kwargs }}
+    domain_type: {{ taylor_domain_type }}
+    domain_name: {{ taylor_domain_name }}
+    data: {{ taylor_dataset }}
+    data_proc: {{ taylor_data_proc }}

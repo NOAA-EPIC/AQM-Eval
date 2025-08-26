@@ -1,0 +1,41 @@
+#!/bin/ksh -x
+# This template is used to generate link_dyns_to_Alldays_eval.sh. 
+
+export ana_path={{ link_Alldays_path }}
+export model_path={{ link_eval_path }}
+export predix={{ link_eval_predix }}
+export target_file={{ link_eval_target }}
+
+cd $model_path
+dirlist=`ls -d {{ link_simulation }}`
+
+cd $ana_path
+for dir in $dirlist
+do
+  dir=${dir%/}
+  ln -sf ${model_path}/${dir}/${target_file}f000.nc ./${predix}_${dir}_f000.nc
+  ln -sf ${model_path}/${dir}/${target_file}f001.nc ./${predix}_${dir}_f001.nc
+  ln -sf ${model_path}/${dir}/${target_file}f002.nc ./${predix}_${dir}_f002.nc
+  ln -sf ${model_path}/${dir}/${target_file}f003.nc ./${predix}_${dir}_f003.nc
+  ln -sf ${model_path}/${dir}/${target_file}f004.nc ./${predix}_${dir}_f004.nc
+  ln -sf ${model_path}/${dir}/${target_file}f005.nc ./${predix}_${dir}_f005.nc
+  ln -sf ${model_path}/${dir}/${target_file}f006.nc ./${predix}_${dir}_f006.nc
+  ln -sf ${model_path}/${dir}/${target_file}f007.nc ./${predix}_${dir}_f007.nc
+  ln -sf ${model_path}/${dir}/${target_file}f008.nc ./${predix}_${dir}_f008.nc
+  ln -sf ${model_path}/${dir}/${target_file}f009.nc ./${predix}_${dir}_f009.nc
+  ln -sf ${model_path}/${dir}/${target_file}f010.nc ./${predix}_${dir}_f010.nc
+  ln -sf ${model_path}/${dir}/${target_file}f011.nc ./${predix}_${dir}_f011.nc
+  ln -sf ${model_path}/${dir}/${target_file}f012.nc ./${predix}_${dir}_f012.nc
+  ln -sf ${model_path}/${dir}/${target_file}f013.nc ./${predix}_${dir}_f013.nc
+  ln -sf ${model_path}/${dir}/${target_file}f014.nc ./${predix}_${dir}_f014.nc
+  ln -sf ${model_path}/${dir}/${target_file}f015.nc ./${predix}_${dir}_f015.nc
+  ln -sf ${model_path}/${dir}/${target_file}f016.nc ./${predix}_${dir}_f016.nc
+  ln -sf ${model_path}/${dir}/${target_file}f017.nc ./${predix}_${dir}_f017.nc
+  ln -sf ${model_path}/${dir}/${target_file}f018.nc ./${predix}_${dir}_f018.nc
+  ln -sf ${model_path}/${dir}/${target_file}f019.nc ./${predix}_${dir}_f019.nc
+  ln -sf ${model_path}/${dir}/${target_file}f020.nc ./${predix}_${dir}_f020.nc
+  ln -sf ${model_path}/${dir}/${target_file}f021.nc ./${predix}_${dir}_f021.nc
+  ln -sf ${model_path}/${dir}/${target_file}f022.nc ./${predix}_${dir}_f022.nc
+  ln -sf ${model_path}/${dir}/${target_file}f023.nc ./${predix}_${dir}_f023.nc
+  ln -sf ${model_path}/${dir}/${target_file}f024.nc ./${predix}_${dir}_f024.nc
+done
