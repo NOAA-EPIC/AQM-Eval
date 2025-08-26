@@ -1,0 +1,13 @@
+name: aqm-eval
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - awscli=2.28.*
+  - mypy=1.17.*
+  - pre-commit=4.3.*
+  - pydantic=2.11.*
+  - pytest=8.4.*
+  - pytest-mock=3.14.*
+  - ruff=0.12.*
+  - typer=0.16.*
