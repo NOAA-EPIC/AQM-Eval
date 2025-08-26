@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# This script extract/calculate necessary variables (PM25_SO4, PM25_NO3, PM25_NH4, etc.) from phy and dyn files for AQS chem PM speciation evaluation.
+#This is option dependent on what "csi_score" is chosen in namelist.chem.yaml 
+# References:
+# https://nco.sourceforge.net/nco.html#Examples-ncap2
+# https://unidata.github.io/MetPy/latest/api/generated/metpy.calc.dewpoint_from_specific_humidity.html
+# https://library.wmo.int/records/item/41650-guide-to-instruments-and-methods-of-observation
+# https://sgichuki.github.io/Atmo/
+
+module load nco
+
+export in_dir=/gpfs/f6/bil-fire3/scratch/Patrick.C.Campbell/expt_dirs/aqmv8p1_testbed_AQMNA13km_warmstart_MetEmis
+export out_dir=/gpfs/f6/bil-fire3/scratch/Patrick.C.Campbell/MM-analysis/aqmv8p1_metemis/Alldays
+export predix="aqmv8p1.metemis.aqs.pm"
+
+cd $in_dir
+dirlist=`ls -d 20230830*/`
+#echo $dirlist
+
+for dir in $dirlist
+do
+  dir=${dir%/}
+
+  for fhr in $(seq -f "%02g" 1 24)
+  do
+    echo $dir
+    echo $fhr
+
+    f_phy=${dir}/phyf0${fhr}.nc
+    f_dyn=${dir}/dynf0${fhr}.nc
+    f_out=${out_dir}/${predix}_${dir}_f0${fhr}.nc
+
+    #Calculate Air Density near surface
+    ncap2 -A -v -s 'time_iso = time_iso' $f_dyn $f_out
+    ncap2 -A -v -s 'lat = lat' $f_dyn $f_out
+    ncap2 -A -v -s 'lon = lon' $f_dyn $f_out
+    ncap2 -A -v -s 'pfull = pfull' $f_dyn $f_out
+    ncap2 -A -v -s 'phalf = phalf' $f_dyn $f_out
+    ncap2 -A -v -s 'delz = delz' $f_dyn $f_out
+    ncap2 -A -v -s 'dpres = dpres' $f_dyn $f_out
+    ncap2 -A -v -s 'hgtsfc = hgtsfc' $f_dyn $f_out
+    ncap2 -A -v -s 'pressfc = pressfc' $f_dyn $f_out  #Unit=Pa
+    ncap2 -A -v -s 'tmp = tmp' $f_dyn $f_out          #Unit=K
+    ncap2 -A -v -s 'tmp2m = tmp2m' $f_phy $f_out      #Unit=K
+    ncap2 -A -v -s 'air_density = (28.97*(pressfc-dpres))/(8.314*tmp)' -s 'air_density@long_name="air density"; air_density@units="g/m3"' $f_out  #Unit = g/m3
+    #Append all PM2.5 species from Modes for AQS file out
+    ncks -A -v aso4i,aso4j,aso4k,ano3i,ano3j,ano3k,anh4i,anh4j,anh4k,aeci,aecj,aorgcj,aothri,aothrj,alvpo1i,alvpo1j,asvpo1i,asvpo1j,asvpo2i,asvpo2j,asvpo3j,aivpo1j,apoci,apocj,alvoo1i,alvoo2i,asvoo1i,asvoo2i,aiso1j,aiso2j,aiso3j,amt1j,amt2j,amt3j,amt4j,amt5j,amt6j,amtno3j,amthydj,aglyj,asqtj,aorgcj,aolgbj,aolgaj,alvoo1j,alvoo2j,asvoo1j,asvoo2j,asvoo3j,aavb1j,aavb2j,aavb3j,aavb4j,apcsoj $f_dyn $f_out
+    #Append all total PM2.5 fractions for AQS file out
+    ncks -A -v pm25at,pm25ac,pm25co $f_dyn $f_out
+    #calculate PM2.5 Sulfate for AQS file out (based on CB6-AERO7 in AQMv8/CMAQv5.4)
+    ncap2 -A -v -s 'pm25_so4 = 0.001*(aso4i*pm25at+aso4j*pm25ac+aso4k*pm25co)*air_density' -s 'pm25_so4@long_name="PM25 Sulfate"; pm25_so4@units="ug/m3"' $f_out  #Unit = ug/m3
+    #calculate PM2.5 Nitrate for AQS file out (based on CB6-AERO7 in AQMv8/CMAQv5.4)
+    ncap2 -A -v -s 'pm25_no3 = 0.001*(ano3i*pm25at+ano3j*pm25ac+ano3k*pm25co)*air_density' -s 'pm25_no3@long_name="PM25 Nitrate"; pm25_no3@units="ug/m3"' $f_out  #Unit = ug/m3
+    #calculate PM2.5 Ammonium for AQS file out (based on CB6-AERO7 in AQMv8/CMAQv5.4)
+    ncap2 -A -v -s 'pm25_nh4 = 0.001*(anh4i*pm25at+anh4j*pm25ac+anh4k*pm25co)*air_density' -s 'pm25_nh4@long_name="PM25 Ammonium"; pm25_nh4@units="ug/m3"' $f_out  #Unit = ug/m3
+    #calculate PM2.5 Elemental Carbon for AQS file out (based on CB6-AERO7 in AQMv8/CMAQv5.4)
+    ncap2 -A -v -s 'pm25_ec = 0.001*(aeci*pm25at+aecj*pm25ac)*air_density' -s 'pm25_ec@long_name="PM25 Elemental Carbon"; pm25_ec@units="ug/m3"' $f_out  #Unit = ug/m3
+    #calculate POC i-mode for AQS file out (based on CB6-AERO7 in AQMv8/CMAQv5.4)
+    ncap2 -A -v -s 'poci = 0.001*(alvpo1i/1.39+asvpo1i/1.32+asvpo2i/1.26+apoci)*air_density' -s 'poci@long_name="Primary Organic Carbon i-mode"; poci@units="ug/m3"' $f_out  #Unit = ug/m3
+    #calculate POC j-mode for AQS file out (based on CB6-AERO7 in AQMv8/CMAQv5.4)
+    ncap2 -A -v -s 'pocj = 0.001*(alvpo1j/1.39+asvpo1j/1.32+asvpo2j/1.26+asvpo3j/1.21+aivpo1j/1.17+apocj)*air_density' -s 'pocj@long_name="Primary Organic Carbon j-mode"; pocj@units="ug/m3"' $f_out  #Unit = ug/m3
+    #calculate POC total (i+j mode) for AQS file out (based on CB6-AERO7 in AQMv8/CMAQv5.4)
+    ncap2 -A -v -s 'poc = poci + pocj'  -s 'poc@long_name="Primary Organic Carbon (i+j)"; poc@units="ug/m3"' $f_out  #Unit = ug/m3
+    #calculate SOC i-mode for AQS file out (based on CB6-AERO7 in AQMv8/CMAQv5.4)
+    ncap2 -A -v -s 'soci = 0.001*(alvoo1i/2.27+alvoo2i/2.06+asvoo1i/1.88+asvoo2i/1.73)*air_density' -s 'soci@long_name="Secondary Organic Carbon i-mode"; soci@units="ug/m3"' $f_out  #Unit = ug/m3
+    #calculate SOC j-mode for AQS file out (based on CB6-AERO7 in AQMv8/CMAQv5.4)
+    ncap2 -A -v -s 'socj = 0.001*(aiso1j/2.20+aiso2j/2.23+aiso3j/2.80+amt1j/1.67+amt2j/1.67+amt3j/1.72+amt4j/1.53+amt5j/1.57+amt6j/1.40+amtno3j/1.90+amthydj/1.54+aglyj/2.13+asqtj/1.52+aorgcj/2.00+aolgbj/2.10+aolgaj/2.50+alvoo1j/2.27+alvoo2j/2.06+asvoo1j/1.88+asvoo2j/1.73+asvoo3j/1.60+aavb1j/2.70+aavb2j/2.35+aavb3j/2.17+aavb4j/1.99+apcsoj/2.00)*air_density'  -s 'socj@long_name="Secondary Organic Carbon j-mode"; socj@units="ug/m3"' $f_out  #Unit = ug/m3
+    #calculate SOC total (i+j mode) for AQS file out (based on CB6-AERO7 in AQMv8/CMAQv5.4)
+    ncap2 -A -v -s 'soc  = soci + socj' -s 'soc@long_name="Secondary Organic Carbon (i+j)"; soc@units="ug/m3"' $f_out  #Unit = ug/m3
+    #calculate PM2.5 OC total (i+j mode) for AQS file out (based on CB6-AERO7 in AQMv8/CMAQv5.4)
+    ncap2 -A -v -s 'pm25_oc   = (poci + soci)*pm25at+(pocj + socj)*pm25ac'  -s 'pm25_oc@long_name="PM25 Organic Carbon (i+j)"; pm25_oc@units="ug/m3"' $f_out  #Unit = ug/m3
+
+  done
+
+  echo $dir
+
+done
