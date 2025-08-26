@@ -55,4 +55,13 @@ template = env.get_template("./yaml_template/template_ish_eval")
 with open("./ish_conv_eval.sh", "w") as f:
     f.write(template.render(**namelist))
 
+# For aqs pm evaluation
+template = env.get_template("./yaml_template/template_aqs_pm_base")
+with open("./aqs_pm_conv_base.sh", "w") as f:
+    f.write(template.render(**namelist))
+template = env.get_template("./yaml_template/template_aqs_pm_eval")
+with open("./aqs_pm_conv_eval.sh", "w") as f:
+    f.write(template.render(**namelist))
+
+
 print("MM control yaml files generated!")
