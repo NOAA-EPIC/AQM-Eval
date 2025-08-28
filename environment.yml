@@ -12,4 +12,4 @@ dependencies:
   - python=3.11
   - ruff=0.12.*
   - typer=0.16.*
-  - melodies-monet #tdk: fix version
+  - melodies-monet #tdk: fix version, need uwtools for srw

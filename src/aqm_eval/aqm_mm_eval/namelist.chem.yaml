@@ -8,10 +8,10 @@
 # ==== General settings ====
 # For MM yamls
 # Time format: yyyy-mm-dd-HH:MM:SS UTC
-start_time: '"2023-06-01-12:00:00"'
-end_time: '"2023-06-02-12:00:00"'
-output_dir: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/output
-debug_option: True
+start_time: '"2023-06-01-12:00:00"' #tdk:varying
+end_time: '"2023-06-02-12:00:00"' #tdk:varying
+output_dir: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/output #tdk:varying
+debug_option: True #tdk:varying
 mm_tasks: [
   "save_paired", "timeseries", "taylor",
   "spatial_bias", "spatial_overlay",
@@ -20,18 +20,18 @@ mm_tasks: [
   "csi", "stats",
 ]
 # For link_dyns_to_Alldays
-link_simulation: "202306*/"
-link_Alldays_path: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/Alldays
+link_simulation: "202306*/" #tdk:varying
+link_Alldays_path: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/Alldays #tdk:varying
 #link_base_path: /gpfs/f6/bil-fire3/scratch/Patrick.C.Campbell/expt_dirs/aqmv8p1_testbed_AQMNA13km_warmstart_Feb2024
 #link_base_predix: '"aqmv8p1.dyn"'
 #link_base_target: '"dyn"'
-link_eval_path: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/sandbox/srw/benkozi/aqm-reldeb/expt_dirs/aqm_AQMNA13km_AEROMMA
-link_eval_predix: '"dyn"'
-link_eval_target: '"dyn"'
+link_eval_path: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/sandbox/srw/benkozi/aqm-reldeb/expt_dirs/aqm_AQMNA13km_AEROMMA #tdk:varying
+link_eval_predix: '"dyn"' #tdk:varying
+link_eval_target: '"dyn"' #tdk:varying
 # For pg8_csi_rename
-rename_dir: "/gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/output"
-rename_date1: '"2023-06-01_12"'
-rename_date2: '"2023-06-02_12"'
+rename_dir: "/gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/output" #tdk:varying
+rename_date1: '"2023-06-01_12"' #tdk:varying
+rename_date2: '"2023-06-02_12"' #tdk:varying
 
 
 # ==== Paired file ====
@@ -65,9 +65,9 @@ paired_dataset:
 #  markersize: 4
 
 
-# ==== Model - eval ====
-model_eval_label: eval_aqm
-model_eval_files: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/Alldays/*.nc
+# ==== Model - eval ==== #tdk:varying (this should allow for two possible models)
+model_eval_label: eval_aqm #tdk:varying
+model_eval_files: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/Alldays/*.nc #tdk:varying
 model_eval_type: '"rrfs"'
 model_eval_kwargs: 
   surf_only: True
@@ -89,7 +89,7 @@ model_eval_plot_kwargs:
 
 # ==== Obs (Airnow by default) ====
 obs_label: airnow
-obs_file: /gpfs/f6/bil-fire3/world-shared/Observations/AirNow/AirNow_20230601_20230701.nc #tdk: need to link to S3 data stage
+obs_file: /gpfs/f6/bil-fire3/world-shared/Observations/AirNow/AirNow_20230601_20230701.nc #tdk:varying, need to link to S3 data stage
 obs_variables:
   PM2.5:
     unit_scale: 1
@@ -264,7 +264,7 @@ multi_boxplot_urban_rural_name: ["msa_name"]
 multi_boxplot_urban_rural_value: '""'
 multi_boxplot_eval_method: '"NME"'  # support 'RMSE', 'IOA' ,' NMB', 'NME'
 multi_boxplot_dataset: ["eval_aqm"]
-multi_boxplot_dataset_label: ["AirNow", "Eval AQM"]
+multi_boxplot_dataset_label: ["AirNow", "Eval AQM"] #tdk:varying, need to customize the label
 multi_boxplot_data_proc:
   rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.
   set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.
