@@ -4,7 +4,13 @@ from typing import Annotated
 
 from pydantic import BaseModel, computed_field, BeforeValidator
 
-PathExisting = Annotated[Path, BeforeValidator(lambda x: Path(x).exists())]
+def _format_path_existing_(value: Path | str) -> Path:
+    ret = Path(value)
+    if not ret.exists():
+        raise ValueError(f"path does not exist: {ret}")
+    return ret
+
+PathExisting = Annotated[Path, BeforeValidator(_format_path_existing_)]
 
 class SRWInterface(BaseModel):
     model_config = {"frozen": True}
