@@ -40,35 +40,44 @@ class SRWInterface(BaseModel):
 
     expt_dir: PathExisting
 
+    dyn_file_template: str = "dynf*.nc"
+
     @computed_field
+    @property
     def config_path_user(self) -> PathExisting:
         return self.expt_dir / "config.yaml"
 
     @computed_field
+    @property
     def config_path_rocoto(self) -> PathExisting:
         return self.expt_dir / "rocoto_defns.yaml"
 
     @computed_field
+    @property
     def date_first_cycle_srw(self) -> str:
         return self.find_nested_key(("workflow", "DATE_FIRST_CYCL"))
 
     @computed_field
+    @property
     def date_last_cycle_srw(self) -> str:
         return self.find_nested_key(("workflow", "DATE_LAST_CYCL"))
 
     @computed_field
+    @property
     def date_first_cycle_mm(self) -> str:
         return _convert_date_string_to_mm_(
             self.date_first_cycle_srw
         )
 
     @computed_field
+    @property
     def date_last_cycle_mm(self) -> str:
         return _convert_date_string_to_mm_(
             self.date_last_cycle_srw
         )
 
     @computed_field
+    @property
     def mm_output_dir(self) -> PathExisting:
         config_path = self.find_nested_key(("task_mm_pre_chem_eval", "MM_OUTPUT_DIR"))
         if config_path is None:
@@ -78,22 +87,31 @@ class SRWInterface(BaseModel):
         return config_path
 
     @computed_field
+    @property
     def mm_run_dir(self) -> PathExisting:
         ret = self.expt_dir / "mm_run"
         ret.mkdir(exist_ok=True, parents=True)
         return ret
 
     @computed_field
-    def mm_evals(self) -> tuple[EvalType, ...]:
-        return tuple([EvalType(ii) for ii in self.find_nested_key(("task_mm_pre_chem_eval", "MM_EVALS"))])
+    @property
+    def mm_eval_types(self) -> tuple[EvalType, ...]:
+        return tuple([EvalType(ii) for ii in self.find_nested_key(("task_mm_pre_chem_eval", "MM_EVAL_TYPES"))])
 
     @computed_field
+    @property
+    def mm_eval_prefix(self) -> str:
+        return self.find_nested_key(("task_mm_pre_chem_eval", "MM_EVAL_PREFIX"))
+
+    @computed_field
+    @property
     def link_simulation(self) -> tuple[str, ...]:
         return tuple(set([f"{str(ii.year)}*" for ii in [self.datetime_first_cycl, self.datetime_last_cycl]]))
 
     @computed_field
+    @property
     def link_alldays_path(self) -> PathExisting:
-        ret = self.mm_output_dir / "Alldays"
+        ret = self.mm_run_dir / "Alldays"
         ret.mkdir(exist_ok=True, parents=True)
         return ret
 
@@ -150,7 +168,7 @@ class MMEvalRunner(BaseModel):
         LOGGER("initializing MMEvalRunner")
         LOGGER(f"{self.iface=}")
         LOGGER("creating symlinks")
-        create_symlinks(self.iface.expt_dir, self.iface.mm_run_dir, self.iface.link_alldays_path)
+        create_symlinks(self.iface.expt_dir, self.iface.mm_run_dir, self.iface.mm_eval_prefix, self.iface.link_alldays_path, self.iface.dyn_file_template)
 
     def run(self) -> None:
         tdk

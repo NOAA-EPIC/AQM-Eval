@@ -22,7 +22,7 @@ def config_path_user(tmp_path: Path) -> Path:
             "DATE_FIRST_CYCL": "2023060112",
             "DATE_LAST_CYCL": "2023060212",
         },
-        "task_mm_pre_chem_eval": {"MM_OUTPUT_DIR": None, "MM_EVALS": ["chem"]},
+        "task_mm_pre_chem_eval": {"MM_OUTPUT_DIR": None, "MM_EVAL_TYPES": ["chem"], "MM_EVAL_PREFIX": "eval"},
     }
 
     yaml_path = tmp_path / "config.yaml"

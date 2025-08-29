@@ -27,5 +27,5 @@ def test_create_symlinks(tmp_path: Path, dummy_dyn_files: None) -> None:
     create_symlinks(tmp_path, dst_dir, "prefix", src_dir_template, src_fn_template)
 
     actual_links = [ii for ii in dst_dir.iterdir()]
-    LOGGER(str(actual_links), level=logging.DEBUG)
+    # LOGGER(str(actual_links), level=logging.DEBUG)
     assert len(actual_links) == 50
