@@ -20,8 +20,8 @@ def _format_path_existing_(value: Path | str) -> Path:
 
 
 def _convert_date_string_to_mm_(date_str: str) -> str:
-    dt = datetime.strptime(date_str, '%Y%m%d%H')
-    return dt.strftime('%Y-%m-%d-%H:00:00')
+    dt = datetime.strptime(date_str, "%Y%m%d%H")
+    return dt.strftime("%Y-%m-%d-%H:00:00")
 
 
 PathExisting = Annotated[Path, BeforeValidator(_format_path_existing_)]
@@ -65,16 +65,12 @@ class SRWInterface(BaseModel):
     @computed_field
     @property
     def date_first_cycle_mm(self) -> str:
-        return _convert_date_string_to_mm_(
-            self.date_first_cycle_srw
-        )
+        return _convert_date_string_to_mm_(self.date_first_cycle_srw)
 
     @computed_field
     @property
     def date_last_cycle_mm(self) -> str:
-        return _convert_date_string_to_mm_(
-            self.date_last_cycle_srw
-        )
+        return _convert_date_string_to_mm_(self.date_last_cycle_srw)
 
     @computed_field
     @property
@@ -96,7 +92,14 @@ class SRWInterface(BaseModel):
     @computed_field
     @property
     def mm_eval_types(self) -> tuple[EvalType, ...]:
-        return tuple([EvalType(ii) for ii in self.find_nested_key(("task_mm_pre_chem_eval", "MM_EVAL_TYPES"))])
+        return tuple(
+            [
+                EvalType(ii)
+                for ii in self.find_nested_key(
+                    ("task_mm_pre_chem_eval", "MM_EVAL_TYPES")
+                )
+            ]
+        )
 
     @computed_field
     @property
@@ -106,7 +109,14 @@ class SRWInterface(BaseModel):
     @computed_field
     @property
     def link_simulation(self) -> tuple[str, ...]:
-        return tuple(set([f"{str(ii.year)}*" for ii in [self.datetime_first_cycl, self.datetime_last_cycl]]))
+        return tuple(
+            set(
+                [
+                    f"{str(ii.year)}*"
+                    for ii in [self.datetime_first_cycl, self.datetime_last_cycl]
+                ]
+            )
+        )
 
     @computed_field
     @property
@@ -117,7 +127,7 @@ class SRWInterface(BaseModel):
 
     @cached_property
     def datetime_first_cycl(self) -> datetime:
-        return datetime.strptime(self.date_first_cycle_srw, '%Y%m%d%H')
+        return datetime.strptime(self.date_first_cycle_srw, "%Y%m%d%H")
 
     @cached_property
     def datetime_last_cycl(self) -> datetime:
@@ -151,9 +161,14 @@ class SRWInterface(BaseModel):
             except KeyError:
                 continue
             except:
-                LOGGER(f"unexpected error: {key_tuple=}, {type(current)=}", level=logging.ERROR)
+                LOGGER(
+                    f"unexpected error: {key_tuple=}, {type(current)=}",
+                    level=logging.ERROR,
+                )
                 raise
-        raise KeyError(f"{key_tuple=} not found in any YAML files: {self.yaml_data.keys()}")
+        raise KeyError(
+            f"{key_tuple=} not found in any YAML files: {self.yaml_data.keys()}"
+        )
 
     def get_yaml_paths(self) -> tuple[PathExisting, ...]:
         return self.config_path_user, self.config_path_rocoto
@@ -168,10 +183,22 @@ class MMEvalRunner(BaseModel):
         LOGGER("initializing MMEvalRunner")
         LOGGER(f"{self.iface=}")
         LOGGER("creating symlinks")
-        create_symlinks(self.iface.expt_dir, self.iface.mm_run_dir, self.iface.mm_eval_prefix, self.iface.link_alldays_path, self.iface.dyn_file_template)
+        create_symlinks(
+            self.iface.expt_dir,
+            self.iface.link_alldays_path,
+            self.iface.mm_eval_prefix,
+            self.iface.link_simulation,
+            (self.iface.dyn_file_template,),
+        )
 
-    def run(self) -> None:
-        tdk
+    def run(self, finalize: bool = False) -> None:
+        LOGGER("running MMEvalRunner")
+        try:
+            tdk
+        finally:
+            if finalize:
+                self.finalize()
 
     def finalize(self) -> None:
+        LOGGER("finalizing MMEvalRunner")
         tdk

@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface
+from aqm_eval.aqm_mm_eval.driver.helpers import create_symlinks
+from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface, MMEvalRunner
 from aqm_eval.logging_aqm_eval import LOGGER
 
 
@@ -42,6 +43,14 @@ def config_path_rocoto(tmp_path: Path) -> Path:
 
     return yaml_path
 
+@pytest.fixture(autouse=True)
+def dummy_dyn_files(tmp_path: Path) -> None:
+    for dirname in ['2023060112', '2023060212']:
+        dyn_dir = tmp_path / dirname
+        dyn_dir.mkdir(exist_ok=False, parents=False)
+        for fhr in range(25):
+            dyn_file = dyn_dir / f"dynf{fhr:03d}.nc"
+            dyn_file.touch()
 
 @pytest.fixture
 def srw_interface(tmp_path) -> SRWInterface:
@@ -65,3 +74,16 @@ class TestSRWInterface:
     def test_find_nested_key_sad_no_child(self, srw_interface: SRWInterface) -> None:
         with pytest.raises(TypeError):
             srw_interface.find_nested_key(("foo", "bar"))
+
+
+class TestMMEvalRunner:
+
+    def test(self, srw_interface: SRWInterface) -> None:
+        runner = MMEvalRunner(iface=srw_interface)
+
+        runner.initialize()
+        actual_links = [ii for ii in srw_interface.link_alldays_path.iterdir()]
+        # LOGGER(str(actual_links), level=logging.DEBUG)
+        assert len(actual_links) == 50
+
+        # runner.run(finalize=True)
