@@ -48,12 +48,24 @@ class SRWInterface(BaseModel):
         return self.expt_dir / "rocoto_defns.yaml"
 
     @computed_field
-    def date_first_cycle(self) -> str:
-        return _convert_date_string_to_mm_(self.find_nested_key(("workflow", "DATE_FIRST_CYCL")))
+    def date_first_cycle_srw(self) -> str:
+        return self.find_nested_key(("workflow", "DATE_FIRST_CYCL"))
 
     @computed_field
-    def date_last_cycle(self) -> str:
-        return _convert_date_string_to_mm_(self.find_nested_key(("workflow", "DATE_LAST_CYCL")))
+    def date_last_cycle_srw(self) -> str:
+        return self.find_nested_key(("workflow", "DATE_LAST_CYCL"))
+
+    @computed_field
+    def date_first_cycle_mm(self) -> str:
+        return _convert_date_string_to_mm_(
+            self.date_first_cycle_srw
+        )
+
+    @computed_field
+    def date_last_cycle_mm(self) -> str:
+        return _convert_date_string_to_mm_(
+            self.date_last_cycle_srw
+        )
 
     @computed_field
     def mm_output_dir(self) -> PathExisting:
