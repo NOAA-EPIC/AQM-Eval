@@ -8,6 +8,7 @@ from typing import Annotated, Any
 import yaml
 from pydantic import BaseModel, BeforeValidator, computed_field
 
+from aqm_eval.aqm_mm_eval.driver.helpers import create_symlinks
 from aqm_eval.logging_aqm_eval import LOGGER
 
 
@@ -146,7 +147,10 @@ class MMEvalRunner(BaseModel):
     iface: SRWInterface
 
     def initialize(self) -> None:
-        tdk
+        LOGGER("initializing MMEvalRunner")
+        LOGGER(f"{self.iface=}")
+        LOGGER("creating symlinks")
+        create_symlinks(self.iface.expt_dir, self.iface.mm_run_dir, self.iface.link_alldays_path)
 
     def run(self) -> None:
         tdk
