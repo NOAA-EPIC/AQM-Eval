@@ -34,6 +34,15 @@ class SRWInterface(BaseModel):
     def date_first_cycle(self) -> str:
         return self.find_nested_key(("workflow", "DATE_FIRST_CYCL"))
 
+    @computed_field
+    def mm_output_dir(self) -> PathExisting:
+        config_path = self.find_nested_key(("task_mm_pre_chem_eval", "MM_OUTPUT_DIR"))
+        if config_path is None:
+            config_path = self.expt_dir / "mm_output"
+        if not config_path.exists():
+            config_path.mkdir(exist_ok=True, parents=True)
+        return config_path
+
     @cached_property
     def yaml_data(self) -> dict[Path, dict[str, Any]]:
         """Cache loaded YAML data from config files."""
