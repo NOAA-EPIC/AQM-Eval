@@ -43,16 +43,6 @@ def config_path_rocoto(tmp_path: Path) -> Path:
     return yaml_path
 
 
-@pytest.fixture(autouse=True)
-def dummy_dyn_files(tmp_path: Path) -> None:
-    for dirname in ['2023060112', '2023060212']:
-        dyn_dir = tmp_path / dirname
-        dyn_dir.mkdir(exist_ok=False, parents=False)
-        for fhr in range(25):
-            dyn_file = dyn_dir / f"dynf{fhr:03d}.nc"
-            dyn_file.touch()
-
-
 @pytest.fixture
 def srw_interface(tmp_path) -> SRWInterface:
     return SRWInterface(expt_dir=tmp_path)
