@@ -52,6 +52,7 @@ class TestSRWInterface:
     def test_init_path_happy(self, srw_interface: SRWInterface) -> None:
         LOGGER(srw_interface, level=logging.DEBUG)
         assert srw_interface.date_first_cycle_mm == '2023-06-01-12:00:00'
+        assert srw_interface.link_simulation == ('2023*',)
 
     def test_find_nested_key_happy_second_yaml(self, srw_interface: SRWInterface) -> None:
         actual = srw_interface.find_nested_key(("foo2", "second"))

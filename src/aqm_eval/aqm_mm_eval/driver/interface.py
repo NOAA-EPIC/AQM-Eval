@@ -80,6 +80,18 @@ class SRWInterface(BaseModel):
     def mm_evals(self) -> tuple[EvalType, ...]:
         return tuple([EvalType(ii) for ii in self.find_nested_key(("task_mm_pre_chem_eval", "MM_EVALS"))])
 
+    @computed_field
+    def link_simulation(self) -> tuple[str, ...]:
+        return tuple(set([f"{str(ii.year)}*" for ii in [self.datetime_first_cycl, self.datetime_last_cycl]]))
+
+    @cached_property
+    def datetime_first_cycl(self) -> datetime:
+        return datetime.strptime(self.date_first_cycle_srw, '%Y%m%d%H')
+
+    @cached_property
+    def datetime_last_cycl(self) -> datetime:
+        return datetime.strptime(self.date_last_cycle_srw, "%Y%m%d%H")
+
     @cached_property
     def yaml_data(self) -> dict[Path, dict[str, Any]]:
         """Cache loaded YAML data from config files."""
