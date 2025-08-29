@@ -77,12 +77,24 @@ class SRWInterface(BaseModel):
         return config_path
 
     @computed_field
+    def mm_run_dir(self) -> PathExisting:
+        ret = self.expt_dir / "mm_run"
+        ret.mkdir(exist_ok=True, parents=True)
+        return ret
+
+    @computed_field
     def mm_evals(self) -> tuple[EvalType, ...]:
         return tuple([EvalType(ii) for ii in self.find_nested_key(("task_mm_pre_chem_eval", "MM_EVALS"))])
 
     @computed_field
     def link_simulation(self) -> tuple[str, ...]:
         return tuple(set([f"{str(ii.year)}*" for ii in [self.datetime_first_cycl, self.datetime_last_cycl]]))
+
+    @computed_field
+    def link_alldays_path(self) -> PathExisting:
+        ret = self.mm_output_dir / "Alldays"
+        ret.mkdir(exist_ok=True, parents=True)
+        return ret
 
     @cached_property
     def datetime_first_cycl(self) -> datetime:
@@ -128,5 +140,16 @@ class SRWInterface(BaseModel):
         return self.config_path_user, self.config_path_rocoto
 
 
-class MMEvalContext(BaseModel):
+class MMEvalRunner(BaseModel):
+    model_config = {"frozen": True}
+
     iface: SRWInterface
+
+    def initialize(self) -> None:
+        tdk
+
+    def run(self) -> None:
+        tdk
+
+    def finalize(self) -> None:
+        tdk
