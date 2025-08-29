@@ -174,6 +174,15 @@ class SRWInterface(BaseModel):
         return self.config_path_user, self.config_path_rocoto
 
 
+class ChemEvalPackage(BaseModel):
+    model_config = {"frozen": True}
+    key: EvalType = EvalType.CHEM
+    config_yaml: str = "namelist.chem.yaml"
+
+    def create_config(self, iface: SRWInterface) -> dict[str, Any]:
+        tdk
+
+
 class MMEvalRunner(BaseModel):
     model_config = {"frozen": True}
 
@@ -190,6 +199,15 @@ class MMEvalRunner(BaseModel):
             self.iface.link_simulation,
             (self.iface.dyn_file_template,),
         )
+
+        for eval_type in self.iface.mm_eval_types:
+            match eval_type:
+                case EvalType.CHEM:
+                    klass = ChemEvalPackage
+                case _:
+                    raise ValueError(eval_type)
+            eval_package = klass()
+            eval_package.create_config(self.iface)
 
     def run(self, finalize: bool = False) -> None:
         LOGGER("running MMEvalRunner")
