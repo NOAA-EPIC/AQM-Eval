@@ -1,10 +1,12 @@
 import logging
+from datetime import datetime
+from enum import StrEnum, unique
 from functools import cached_property
 from pathlib import Path
 from typing import Annotated, Any
 
 import yaml
-from pydantic import BaseModel, computed_field, BeforeValidator
+from pydantic import BaseModel, BeforeValidator, computed_field
 
 from aqm_eval.logging_aqm_eval import LOGGER
 
@@ -15,7 +17,22 @@ def _format_path_existing_(value: Path | str) -> Path:
         raise ValueError(f"path does not exist: {ret}")
     return ret
 
+
+def _convert_date_string_to_mm_(date_str: str) -> str:
+    dt = datetime.strptime(date_str, '%Y%m%d%H')
+    return dt.strftime('%Y-%m-%d-%H:00:00')
+
+
 PathExisting = Annotated[Path, BeforeValidator(_format_path_existing_)]
+
+
+@unique
+class EvalType(StrEnum):
+    CHEM = "chem"
+    MET = "met"
+    AQS_PM25 = "aqs_pm25"
+    VOCS = "vocs"
+
 
 class SRWInterface(BaseModel):
     model_config = {"frozen": True}
@@ -32,7 +49,11 @@ class SRWInterface(BaseModel):
 
     @computed_field
     def date_first_cycle(self) -> str:
-        return self.find_nested_key(("workflow", "DATE_FIRST_CYCL"))
+        return _convert_date_string_to_mm_(self.find_nested_key(("workflow", "DATE_FIRST_CYCL")))
+
+    @computed_field
+    def date_last_cycle(self) -> str:
+        return _convert_date_string_to_mm_(self.find_nested_key(("workflow", "DATE_LAST_CYCL")))
 
     @computed_field
     def mm_output_dir(self) -> PathExisting:
@@ -43,12 +64,16 @@ class SRWInterface(BaseModel):
             config_path.mkdir(exist_ok=True, parents=True)
         return config_path
 
+    @computed_field
+    def mm_evals(self) -> tuple[EvalType, ...]:
+        return tuple([EvalType(ii) for ii in self.find_nested_key(("task_mm_pre_chem_eval", "MM_EVALS"))])
+
     @cached_property
     def yaml_data(self) -> dict[Path, dict[str, Any]]:
         """Cache loaded YAML data from config files."""
         data = {}
         for yaml_path in self.get_yaml_paths():
-            with open(yaml_path, 'r') as f:
+            with open(yaml_path, "r") as f:
                 data[yaml_path] = yaml.safe_load(f)
         return data
 
@@ -58,7 +83,8 @@ class SRWInterface(BaseModel):
         Args:
             key_tuple: Tuple of strings representing nested dictionary keys
 
-        Returns:
+        Returns
+        -------
             The value found at the nested key location
         """
         for yaml_path, yaml_dict in self.yaml_data.items():
