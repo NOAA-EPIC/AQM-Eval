@@ -177,11 +177,6 @@ class SRWInterface(BaseModel):
         return data
 
     @cached_property
-    def mm_tasks(self) -> tuple[MMTask, ...]:
-        #tdk: need to handle multiple models where scorecard is relevant
-        return tuple([ii for ii in MMTask if not ii.name.startswith("SCORECARD")])
-
-    @cached_property
     def yaml_srw_config_paths(self) -> tuple[PathExisting, ...]:
         return self.config_path_user, self.config_path_rocoto
 
@@ -217,6 +212,7 @@ class ChemEvalPackage(BaseModel):
     model_config = {"frozen": True}
     key: EvalType = EvalType.CHEM
     namelist_template: str = "namelist.chem.j2"
+    tasks: tuple[MMTask, ...] = tuple([ii for ii in MMTask if not ii.name.startswith("SCORECARD")]) #tdk: handle scorecard scenario
 
     def create_control_configs(self, iface: SRWInterface):
         searchpath = iface.template_dir
@@ -228,7 +224,7 @@ class ChemEvalPackage(BaseModel):
             package_run_dir.mkdir(exist_ok=True, parents=True)
         env = Environment(loader=FileSystemLoader(searchpath=searchpath), undefined=StrictUndefined)
         cfg = iface.model_dump()
-        cfg["mm_tasks"] = [ii.value for ii in iface.mm_tasks]
+        cfg["mm_tasks"] = [ii.value for ii in self.tasks]
         namelist_config_str = env.get_template(self.namelist_template).render(cfg)
         namelist_config = yaml.safe_load(namelist_config_str)
         with open(package_run_dir / "namelist.yaml", "w") as f:
