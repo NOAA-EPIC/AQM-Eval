@@ -45,7 +45,7 @@ PathExisting = Annotated[Path, BeforeValidator(_format_path_existing_)]
 
 
 @unique
-class EvalType(StrEnum):
+class PackageKey(StrEnum):
     CHEM = "chem"
     MET = "met"
     AQS_PM25 = "aqs_pm25"
@@ -108,10 +108,10 @@ class SRWInterface(BaseModel):
 
     @computed_field
     @property
-    def mm_eval_types(self) -> tuple[EvalType, ...]:
+    def mm_eval_types(self) -> tuple[PackageKey, ...]:
         return tuple(
             [
-                EvalType(ii)
+                PackageKey(ii)
                 for ii in self.find_nested_key(
                     ("task_mm_pre_chem_eval", "MM_EVAL_TYPES")
                 )
@@ -210,7 +210,7 @@ class SRWInterface(BaseModel):
 
 class ChemEvalPackage(BaseModel):
     model_config = {"frozen": True}
-    key: EvalType = EvalType.CHEM
+    key: PackageKey = PackageKey.CHEM
     namelist_template: str = "namelist.chem.j2"
     tasks: tuple[MMTask, ...] = tuple([ii for ii in MMTask if not ii.name.startswith("SCORECARD")]) #tdk: handle scorecard scenario
 

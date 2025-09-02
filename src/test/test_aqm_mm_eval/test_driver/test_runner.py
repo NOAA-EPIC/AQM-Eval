@@ -1,4 +1,4 @@
-from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface, EvalType
+from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface, PackageKey
 from aqm_eval.aqm_mm_eval.driver.runner import MMEvalRunner
 
 
@@ -15,7 +15,7 @@ class TestMMEvalRunner:
         assert len(actual_links) == 50
 
         # Test control yaml files are created
-        chem_run_dir = srw_interface.mm_run_dir / EvalType.CHEM.value
+        chem_run_dir = srw_interface.mm_run_dir / PackageKey.CHEM.value
         actual_files = chem_run_dir.rglob("*")
         assert set([ii.name for ii in actual_files]) == {
             "control_spatial_bias.yaml",

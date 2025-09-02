@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from aqm_eval.aqm_mm_eval.driver.helpers import create_symlinks
 from aqm_eval.aqm_mm_eval.driver.interface import (
     SRWInterface,
-    EvalType,
+    PackageKey,
     ChemEvalPackage,
     MMTask,
 )
@@ -13,7 +13,6 @@ import matplotlib
 
 
 from melodies_monet import driver
-import os, sys
 import dask
 import cartopy
 
@@ -39,14 +38,14 @@ class MMEvalRunner(BaseModel):
         for eval_type in self.iface.mm_eval_types:
             LOGGER(f"{eval_type=}")
             match eval_type:
-                case EvalType.CHEM:
+                case PackageKey.CHEM:
                     klass = ChemEvalPackage
                 case _:
                     raise ValueError(eval_type)
             eval_package = klass()
             eval_package.create_control_configs(self.iface)
 
-    def run(self, package_selector: tuple[EvalType, ...] | None = None, task_selector: tuple[MMTask, ...] | None = None, finalize: bool = False) -> None:
+    def run(self, package_selector: tuple[PackageKey, ...] | None = None, task_selector: tuple[MMTask, ...] | None = None, finalize: bool = False) -> None:
         LOGGER("running MMEvalRunner")
         try:
             if package_selector is None:
