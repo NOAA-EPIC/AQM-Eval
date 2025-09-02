@@ -190,7 +190,7 @@ class SRWInterface(BaseModel):
 class ChemEvalPackage(BaseModel):
     model_config = {"frozen": True}
     key: EvalType = EvalType.CHEM
-    config_yaml: str = "namelist.chem.yaml"
+    namelist_template: str = "namelist.chem.j2"
 
     def get_mm_tasks(self) -> tuple[str, ...]:
         mm_tasks = [
@@ -219,15 +219,19 @@ class ChemEvalPackage(BaseModel):
             LOGGER(f"{package_run_dir=} does not exist. creating.")
             package_run_dir.mkdir(exist_ok=True, parents=True)
         env = Environment(loader=FileSystemLoader(searchpath=searchpath))
-        mm_tasks = self.get_mm_tasks()
         cfg = iface.model_dump()
+        namelist_config_str = env.get_template(self.namelist_template).render(cfg)
+        with open(package_run_dir / "namelist.yaml", "w") as f:
+            f.write(namelist_config_str)
+        namelist_config = yaml.safe_load(namelist_config_str)
+        mm_tasks = self.get_mm_tasks()
         LOGGER(f"{mm_tasks=}")
         for task in mm_tasks:
             LOGGER(f"{task=}")
             template = env.get_template(f"template_{task}.j2")
             LOGGER(f"{template=}")
-            config_yaml = template.render(**cfg)
-            curr_control_path = iface.mm_run_dir / f"control_{task}.yaml"
+            config_yaml = template.render(**namelist_config)
+            curr_control_path = package_run_dir / f"control_{task}.yaml"
             LOGGER(f"{curr_control_path=}")
             with open(curr_control_path, "w") as f:
                 f.write(config_yaml)
