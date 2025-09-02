@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import yaml
+from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel, BeforeValidator, computed_field
 
 from aqm_eval.aqm_mm_eval.driver.helpers import create_symlinks
@@ -108,6 +109,13 @@ class SRWInterface(BaseModel):
 
     @computed_field
     @property
+    def mm_obs_airnow_fn_template(self) -> str:
+        return self.find_nested_key(
+            ("task_mm_pre_chem_eval", "MM_OBS_AIRNOW_FN_TEMPLATE")
+        )
+
+    @computed_field
+    @property
     def link_simulation(self) -> tuple[str, ...]:
         return tuple(
             set(
@@ -124,6 +132,11 @@ class SRWInterface(BaseModel):
         ret = self.mm_run_dir / "Alldays"
         ret.mkdir(exist_ok=True, parents=True)
         return ret
+
+    @computed_field
+    @property
+    def template_dir(self) -> PathExisting:
+        return (Path(__file__).parent.parent / "yaml_template").absolute().resolve()
 
     @cached_property
     def datetime_first_cycl(self) -> datetime:
@@ -179,8 +192,45 @@ class ChemEvalPackage(BaseModel):
     key: EvalType = EvalType.CHEM
     config_yaml: str = "namelist.chem.yaml"
 
-    def create_config(self, iface: SRWInterface) -> dict[str, Any]:
-        tdk
+    def get_mm_tasks(self) -> tuple[str, ...]:
+        mm_tasks = [
+            "save_paired",
+            "timeseries",
+            "taylor",
+            "spatial_bias",
+            "spatial_overlay",
+            "boxplot",
+            "multi_boxplot",
+            # "scorecard_rmse", #tdk: handle situation with multiple models where scorecards make sense
+            # "scorecard_ioa",
+            # "scorecard_nmb",
+            # "scorecard_nme",
+            "csi",
+            "stats",
+        ]
+        return tuple(mm_tasks)
+
+    def create_control_configs(self, iface: SRWInterface):
+        searchpath = iface.template_dir
+        LOGGER(f"creating MM evaluation templates. {searchpath=}")
+        package_run_dir = iface.mm_run_dir / self.key.value
+        LOGGER(f"{package_run_dir=}")
+        if not package_run_dir.exists():
+            LOGGER(f"{package_run_dir=} does not exist. creating.")
+            package_run_dir.mkdir(exist_ok=True, parents=True)
+        env = Environment(loader=FileSystemLoader(searchpath=searchpath))
+        mm_tasks = self.get_mm_tasks()
+        cfg = iface.model_dump()
+        LOGGER(f"{mm_tasks=}")
+        for task in mm_tasks:
+            LOGGER(f"{task=}")
+            template = env.get_template(f"template_{task}.j2")
+            LOGGER(f"{template=}")
+            config_yaml = template.render(**cfg)
+            curr_control_path = iface.mm_run_dir / f"control_{task}.yaml"
+            LOGGER(f"{curr_control_path=}")
+            with open(curr_control_path, "w") as f:
+                f.write(config_yaml)
 
 
 class MMEvalRunner(BaseModel):
@@ -201,13 +251,14 @@ class MMEvalRunner(BaseModel):
         )
 
         for eval_type in self.iface.mm_eval_types:
+            LOGGER(f"{eval_type=}")
             match eval_type:
                 case EvalType.CHEM:
                     klass = ChemEvalPackage
                 case _:
                     raise ValueError(eval_type)
             eval_package = klass()
-            eval_package.create_config(self.iface)
+            eval_package.create_control_configs(self.iface)
 
     def run(self, finalize: bool = False) -> None:
         LOGGER("running MMEvalRunner")
