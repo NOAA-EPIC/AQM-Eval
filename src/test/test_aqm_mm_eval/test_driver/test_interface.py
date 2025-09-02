@@ -1,66 +1,16 @@
 import logging
-from pathlib import Path
 
 import pytest
-import yaml
 
-from aqm_eval.aqm_mm_eval.driver.helpers import create_symlinks
-from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface, MMEvalRunner, EvalType
+from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface
 from aqm_eval.logging_aqm_eval import LOGGER
-
-
-@pytest.fixture(autouse=True)
-def config_path_user(tmp_path: Path) -> Path:
-    yaml_content = {
-        "metadata": {"description": "config for SRW-AQM, AQM_NA_13km, AEROMMA field campaign"},
-        "user": {"RUN_ENVIR": "community", "MACHINE": "GAEAC6", "ACCOUNT": "bil-fire8"},
-        "workflow": {
-            "USE_CRON_TO_RELAUNCH": True,
-            "CRON_RELAUNCH_INTVL_MNTS": 3,
-            "EXPT_SUBDIR": "aqm_AQMNA13km_AEROMMA",
-            "PREDEF_GRID_NAME": "AQM_NA_13km",
-            "CCPP_PHYS_SUITE": "FV3_GFS_v16",
-            "DATE_FIRST_CYCL": "2023060112",
-            "DATE_LAST_CYCL": "2023060212",
-        },
-        "task_mm_pre_chem_eval": {"MM_OUTPUT_DIR": None, "MM_EVAL_TYPES": ["chem"], "MM_EVAL_PREFIX": "eval", "MM_OBS_AIRNOW_FN_TEMPLATE": "AirNow_20230601_20230701.nc"},
-    }
-
-    yaml_path = tmp_path / "config.yaml"
-    with open(yaml_path, "w") as f:
-        yaml.dump(yaml_content, f)
-
-    return yaml_path
-
-
-@pytest.fixture(autouse=True)
-def config_path_rocoto(tmp_path: Path) -> Path:
-    yaml_content = {"foo": "bar", "foo2": {"second": "baz"}}
-
-    yaml_path = tmp_path / "rocoto_defns.yaml"
-    with open(yaml_path, "w") as f:
-        yaml.dump(yaml_content, f)
-
-    return yaml_path
-
-@pytest.fixture(autouse=True)
-def dummy_dyn_files(tmp_path: Path) -> None:
-    for dirname in ['2023060112', '2023060212']:
-        dyn_dir = tmp_path / dirname
-        dyn_dir.mkdir(exist_ok=False, parents=False)
-        for fhr in range(25):
-            dyn_file = dyn_dir / f"dynf{fhr:03d}.nc"
-            dyn_file.touch()
-
-@pytest.fixture
-def srw_interface(tmp_path) -> SRWInterface:
-    return SRWInterface(expt_dir=tmp_path)
+from test.test_aqm_mm_eval.test_driver.conftest import srw_interface
 
 
 class TestSRWInterface:
     def test_init_path_happy(self, srw_interface: SRWInterface) -> None:
         LOGGER(srw_interface, level=logging.DEBUG)
-        assert srw_interface.start_time == '2023-06-01-12:00:00'
+        assert srw_interface.date_first_cycle_mm == '2023-06-01-12:00:00'
         assert srw_interface.link_simulation == ('2023*',)
 
     def test_find_nested_key_happy_second_yaml(self, srw_interface: SRWInterface) -> None:
@@ -76,18 +26,3 @@ class TestSRWInterface:
             srw_interface.find_nested_key(("foo", "bar"))
 
 
-class TestMMEvalRunner:
-
-    def test(self, srw_interface: SRWInterface) -> None:
-        runner = MMEvalRunner(iface=srw_interface)
-
-        runner.initialize()
-
-        actual_links = [ii for ii in srw_interface.link_alldays_path.iterdir()]
-        # LOGGER(str(actual_links), level=logging.DEBUG)
-        assert len(actual_links) == 50
-
-        assert (srw_interface.mm_run_dir / EvalType.CHEM.value / "namelist.yaml").exists()
-        tdk
-
-        # runner.run(finalize=True)
