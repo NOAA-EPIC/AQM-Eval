@@ -54,9 +54,15 @@ class PackageKey(StrEnum):
 
 class ChemEvalPackage(BaseModel):
     model_config = {"frozen": True}
+    root_dir: Path
     key: PackageKey = PackageKey.CHEM
     namelist_template: str = "namelist.chem.j2"
     tasks: tuple[TaskKey, ...] = tuple([ii for ii in TaskKey if not ii.name.startswith("SCORECARD")]) #tdk: handle scorecard scenario
+
+    @computed_field
+    @property
+    def run_dir(self) -> Path:
+        return self.root_dir / self.key.value
 
 class SRWInterface(BaseModel):
     model_config = {"frozen": True}
@@ -174,7 +180,7 @@ class SRWInterface(BaseModel):
                     klass = ChemEvalPackage
                 case _:
                     raise ValueError(package_key)
-            ret.append(klass())
+            ret.append(klass(root_dir=self.mm_run_dir))
         return tuple(ret)
 
     @cached_property
@@ -203,7 +209,7 @@ class SRWInterface(BaseModel):
             iface = self
             searchpath = iface.template_dir
             LOGGER(f"creating MM evaluation templates. {searchpath=}")
-            package_run_dir = iface.mm_run_dir / package.key.value
+            package_run_dir = package.run_dir
             LOGGER(f"{package_run_dir=}")
             if not package_run_dir.exists():
                 LOGGER(f"{package_run_dir=} does not exist. creating.")
