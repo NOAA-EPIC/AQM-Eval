@@ -88,5 +88,6 @@ class TestMMEvalRunner:
         assert len(actual_links) == 50
 
         assert (srw_interface.mm_run_dir / EvalType.CHEM.value / "namelist.yaml").exists()
+        tdk
 
         # runner.run(finalize=True)

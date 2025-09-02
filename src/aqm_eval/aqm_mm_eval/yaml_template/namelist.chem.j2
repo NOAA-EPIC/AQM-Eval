@@ -12,13 +12,7 @@ start_time: {{ date_first_cycle_mm }} #tdk:varying
 end_time: {{ date_last_cycle_mm }} #tdk:varying
 output_dir: {{ mm_output_dir }} #tdk:varying
 debug_option: True #tdk:varying
-mm_tasks: [
-  "save_paired", "timeseries", "taylor",
-  "spatial_bias", "spatial_overlay",
-  "boxplot", "multi_boxplot",
-  "scorecard_rmse", "scorecard_ioa", "scorecard_nmb", "scorecard_nme",
-  "csi", "stats",
-]
+mm_tasks: {{ mm_tasks }}
 # For link_dyns_to_Alldays
 #link_simulation: "202306*/" #tdk:varying
 #link_Alldays_path: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/Alldays #tdk:varying
@@ -67,7 +61,7 @@ paired_dataset:
 
 # ==== Model - eval ==== #tdk:varying (this should allow for two possible models)
 model_eval_label: eval_aqm #tdk:varying
-model_eval_files: {{ link_alldays_path }}/*.nc #tdk:varying
+model_eval_files: {{ link_alldays_path_template }} #tdk:varying
 model_eval_type: '"rrfs"'
 model_eval_kwargs: 
   surf_only: True

@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import yaml
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from pydantic import BaseModel, BeforeValidator, computed_field
 
 from aqm_eval.aqm_mm_eval.driver.helpers import create_symlinks
@@ -135,6 +135,11 @@ class SRWInterface(BaseModel):
 
     @computed_field
     @property
+    def link_alldays_path_template(self) -> str:
+        return str(self.link_alldays_path / "*.nc")
+
+    @computed_field
+    @property
     def template_dir(self) -> PathExisting:
         return (Path(__file__).parent.parent / "yaml_template").absolute().resolve()
 
@@ -218,15 +223,14 @@ class ChemEvalPackage(BaseModel):
         if not package_run_dir.exists():
             LOGGER(f"{package_run_dir=} does not exist. creating.")
             package_run_dir.mkdir(exist_ok=True, parents=True)
-        env = Environment(loader=FileSystemLoader(searchpath=searchpath))
+        env = Environment(loader=FileSystemLoader(searchpath=searchpath), undefined=StrictUndefined)
         cfg = iface.model_dump()
+        cfg["mm_tasks"] = self.get_mm_tasks()
         namelist_config_str = env.get_template(self.namelist_template).render(cfg)
+        namelist_config = yaml.safe_load(namelist_config_str)
         with open(package_run_dir / "namelist.yaml", "w") as f:
             f.write(namelist_config_str)
-        namelist_config = yaml.safe_load(namelist_config_str)
-        mm_tasks = self.get_mm_tasks()
-        LOGGER(f"{mm_tasks=}")
-        for task in mm_tasks:
+        for task in cfg["mm_tasks"]:
             LOGGER(f"{task=}")
             template = env.get_template(f"template_{task}.j2")
             LOGGER(f"{template=}")
@@ -254,6 +258,7 @@ class MMEvalRunner(BaseModel):
             (self.iface.dyn_file_template,),
         )
 
+        LOGGER("creating MM control configs")
         for eval_type in self.iface.mm_eval_types:
             LOGGER(f"{eval_type=}")
             match eval_type:
@@ -274,4 +279,3 @@ class MMEvalRunner(BaseModel):
 
     def finalize(self) -> None:
         LOGGER("finalizing MMEvalRunner")
-        tdk
