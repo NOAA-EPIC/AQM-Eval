@@ -204,7 +204,7 @@ class SRWInterface(BaseModel):
     def yaml_srw_config_paths(self) -> tuple[PathExisting, ...]:
         return self.config_path_user, self.config_path_rocoto
 
-    def create_control_configs(self):
+    def create_control_configs(self) -> None:
         for package in self.mm_packages:
             iface = self
             searchpath = iface.template_dir
