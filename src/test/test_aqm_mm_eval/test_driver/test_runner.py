@@ -30,6 +30,8 @@ class TestMMEvalRunner:
             "control_boxplot.yaml",
         }
 
+        runner.run()
+
         tdk
 
         # runner.run(finalize=True)

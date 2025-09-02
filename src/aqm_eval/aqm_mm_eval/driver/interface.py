@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import StrEnum, unique
 from functools import cached_property
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Iterator
 
 import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
@@ -13,7 +13,7 @@ from aqm_eval.logging_aqm_eval import LOGGER
 
 
 @unique
-class MMTask(StrEnum):
+class TaskKey(StrEnum):
     SAVE_PAIRED = "save_paired"
     TIMESERIES = "timeseries"
     TAYLOR = "taylor"
@@ -51,6 +51,12 @@ class PackageKey(StrEnum):
     AQS_PM25 = "aqs_pm25"
     VOCS = "vocs"
 
+
+class ChemEvalPackage(BaseModel):
+    model_config = {"frozen": True}
+    key: PackageKey = PackageKey.CHEM
+    namelist_template: str = "namelist.chem.j2"
+    tasks: tuple[TaskKey, ...] = tuple([ii for ii in TaskKey if not ii.name.startswith("SCORECARD")]) #tdk: handle scorecard scenario
 
 class SRWInterface(BaseModel):
     model_config = {"frozen": True}
@@ -108,7 +114,7 @@ class SRWInterface(BaseModel):
 
     @computed_field
     @property
-    def mm_eval_types(self) -> tuple[PackageKey, ...]:
+    def mm_package_keys(self) -> tuple[PackageKey, ...]:
         return tuple(
             [
                 PackageKey(ii)
@@ -160,6 +166,18 @@ class SRWInterface(BaseModel):
         return (Path(__file__).parent.parent / "yaml_template").absolute().resolve()
 
     @cached_property
+    def mm_packages(self) -> tuple[ChemEvalPackage, ...]:
+        ret = []
+        for package_key in self.mm_package_keys:
+            match package_key:
+                case PackageKey.CHEM:
+                    klass = ChemEvalPackage
+                case _:
+                    raise ValueError(package_key)
+            ret.append(klass())
+        return tuple(ret)
+
+    @cached_property
     def datetime_first_cycl(self) -> datetime:
         return datetime.strptime(self.date_first_cycle_srw, "%Y%m%d%H")
 
@@ -179,6 +197,33 @@ class SRWInterface(BaseModel):
     @cached_property
     def yaml_srw_config_paths(self) -> tuple[PathExisting, ...]:
         return self.config_path_user, self.config_path_rocoto
+
+    def create_control_configs(self):
+        for package in self.mm_packages:
+            iface = self
+            searchpath = iface.template_dir
+            LOGGER(f"creating MM evaluation templates. {searchpath=}")
+            package_run_dir = iface.mm_run_dir / package.key.value
+            LOGGER(f"{package_run_dir=}")
+            if not package_run_dir.exists():
+                LOGGER(f"{package_run_dir=} does not exist. creating.")
+                package_run_dir.mkdir(exist_ok=True, parents=True)
+            env = Environment(loader=FileSystemLoader(searchpath=searchpath), undefined=StrictUndefined)
+            cfg = iface.model_dump()
+            cfg["mm_tasks"] = [ii.value for ii in package.tasks]
+            namelist_config_str = env.get_template(package.namelist_template).render(cfg)
+            namelist_config = yaml.safe_load(namelist_config_str)
+            with open(package_run_dir / "namelist.yaml", "w") as f:
+                f.write(namelist_config_str)
+            for task in cfg["mm_tasks"]:
+                LOGGER(f"{task=}")
+                template = env.get_template(f"template_{task}.j2")
+                LOGGER(f"{template=}")
+                config_yaml = template.render(**namelist_config)
+                curr_control_path = package_run_dir / f"control_{task}.yaml"
+                LOGGER(f"{curr_control_path=}")
+                with open(curr_control_path, "w") as f:
+                    f.write(config_yaml)
 
     def find_nested_key(self, key_tuple: tuple[str, ...]) -> Any:
         """Find a nested key in the YAML dictionaries using a tuple of string keys.
@@ -207,36 +252,3 @@ class SRWInterface(BaseModel):
         raise KeyError(
             f"{key_tuple=} not found in any YAML files: {self.yaml_data.keys()}"
         )
-
-class ChemEvalPackage(BaseModel):
-    model_config = {"frozen": True}
-    key: PackageKey = PackageKey.CHEM
-    namelist_template: str = "namelist.chem.j2"
-    tasks: tuple[MMTask, ...] = tuple([ii for ii in MMTask if not ii.name.startswith("SCORECARD")]) #tdk: handle scorecard scenario
-
-    def create_control_configs(self, iface: SRWInterface):
-        searchpath = iface.template_dir
-        LOGGER(f"creating MM evaluation templates. {searchpath=}")
-        package_run_dir = iface.mm_run_dir / self.key.value
-        LOGGER(f"{package_run_dir=}")
-        if not package_run_dir.exists():
-            LOGGER(f"{package_run_dir=} does not exist. creating.")
-            package_run_dir.mkdir(exist_ok=True, parents=True)
-        env = Environment(loader=FileSystemLoader(searchpath=searchpath), undefined=StrictUndefined)
-        cfg = iface.model_dump()
-        cfg["mm_tasks"] = [ii.value for ii in self.tasks]
-        namelist_config_str = env.get_template(self.namelist_template).render(cfg)
-        namelist_config = yaml.safe_load(namelist_config_str)
-        with open(package_run_dir / "namelist.yaml", "w") as f:
-            f.write(namelist_config_str)
-        for task in cfg["mm_tasks"]:
-            LOGGER(f"{task=}")
-            template = env.get_template(f"template_{task}.j2")
-            LOGGER(f"{template=}")
-            config_yaml = template.render(**namelist_config)
-            curr_control_path = package_run_dir / f"control_{task}.yaml"
-            LOGGER(f"{curr_control_path=}")
-            with open(curr_control_path, "w") as f:
-                f.write(config_yaml)
-
-
