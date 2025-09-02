@@ -4,7 +4,6 @@ import pytest
 
 from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface
 from aqm_eval.logging_aqm_eval import LOGGER
-from test.test_aqm_mm_eval.test_driver.conftest import srw_interface
 
 
 class TestSRWInterface:
@@ -24,5 +23,3 @@ class TestSRWInterface:
     def test_find_nested_key_sad_no_child(self, srw_interface: SRWInterface) -> None:
         with pytest.raises(TypeError):
             srw_interface.find_nested_key(("foo", "bar"))
-
-
