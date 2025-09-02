@@ -12,6 +12,23 @@ from pydantic import BaseModel, BeforeValidator, computed_field
 from aqm_eval.logging_aqm_eval import LOGGER
 
 
+@unique
+class MMTask(StrEnum):
+    SAVE_PAIRED = "save_paired"
+    TIMESERIES = "timeseries"
+    TAYLOR = "taylor"
+    SPATIAL_BIAS = "spatial_bias"
+    SPATIAL_OVERLAY = "spatial_overlay"
+    BOXPLOT = "boxplot"
+    MULTI_BOXPLOT = "multi_boxplot"
+    SCORECARD_RMSE = "scorecard_rmse"  # tdk: handle situation with multiple models where scorecards make sense
+    SCORECARD_IOA = "scorecard_ioa"
+    SCORECARD_NMB = "scorecard_nmb"
+    SCORECARD_NME = "scorecard_nme"
+    CSI = "csi"
+    STATS = "stats"
+
+
 def _format_path_existing_(value: Path | str) -> Path:
     ret = Path(value)
     if not ret.exists():
@@ -154,10 +171,19 @@ class SRWInterface(BaseModel):
     def yaml_data(self) -> dict[Path, dict[str, Any]]:
         """Cache loaded YAML data from config files."""
         data = {}
-        for yaml_path in self.get_yaml_paths():
+        for yaml_path in self.yaml_srw_config_paths:
             with open(yaml_path, "r") as f:
                 data[yaml_path] = yaml.safe_load(f)
         return data
+
+    @cached_property
+    def mm_tasks(self) -> tuple[MMTask, ...]:
+        #tdk: need to handle multiple models where scorecard is relevant
+        return tuple([ii for ii in MMTask if not ii.name.startswith("SCORECARD")])
+
+    @cached_property
+    def yaml_srw_config_paths(self) -> tuple[PathExisting, ...]:
+        return self.config_path_user, self.config_path_rocoto
 
     def find_nested_key(self, key_tuple: tuple[str, ...]) -> Any:
         """Find a nested key in the YAML dictionaries using a tuple of string keys.
@@ -187,32 +213,10 @@ class SRWInterface(BaseModel):
             f"{key_tuple=} not found in any YAML files: {self.yaml_data.keys()}"
         )
 
-    def get_yaml_paths(self) -> tuple[PathExisting, ...]:
-        return self.config_path_user, self.config_path_rocoto
-
-
 class ChemEvalPackage(BaseModel):
     model_config = {"frozen": True}
     key: EvalType = EvalType.CHEM
     namelist_template: str = "namelist.chem.j2"
-
-    def get_mm_tasks(self) -> tuple[str, ...]:
-        mm_tasks = [
-            "save_paired",
-            "timeseries",
-            "taylor",
-            "spatial_bias",
-            "spatial_overlay",
-            "boxplot",
-            "multi_boxplot",
-            # "scorecard_rmse", #tdk: handle situation with multiple models where scorecards make sense
-            # "scorecard_ioa",
-            # "scorecard_nmb",
-            # "scorecard_nme",
-            "csi",
-            "stats",
-        ]
-        return tuple(mm_tasks)
 
     def create_control_configs(self, iface: SRWInterface):
         searchpath = iface.template_dir
@@ -224,7 +228,7 @@ class ChemEvalPackage(BaseModel):
             package_run_dir.mkdir(exist_ok=True, parents=True)
         env = Environment(loader=FileSystemLoader(searchpath=searchpath), undefined=StrictUndefined)
         cfg = iface.model_dump()
-        cfg["mm_tasks"] = self.get_mm_tasks()
+        cfg["mm_tasks"] = [ii.value for ii in iface.mm_tasks]
         namelist_config_str = env.get_template(self.namelist_template).render(cfg)
         namelist_config = yaml.safe_load(namelist_config_str)
         with open(package_run_dir / "namelist.yaml", "w") as f:

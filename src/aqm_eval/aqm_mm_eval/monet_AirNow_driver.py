@@ -35,7 +35,7 @@ print("---- Melodies-monet control file:", an.control)
 cmd = "cp " + an.control + " " + an.control_dict["analysis"]["output_dir"]
 print(f"{cmd=}")
 os.system(cmd)
-dask.config.set(**{"array.slicing.split_large_chunks": True})
+
 
 # -- Create plots or stats based on yaml settings
 if yaml_option == "save_paired":

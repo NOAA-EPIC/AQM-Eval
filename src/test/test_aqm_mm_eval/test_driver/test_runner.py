@@ -14,7 +14,7 @@ class TestMMEvalRunner:
         # LOGGER(str(actual_links), level=logging.DEBUG)
         assert len(actual_links) == 50
 
-        # Test control yaml files exist as expected
+        # Test control yaml files are created
         chem_run_dir = srw_interface.mm_run_dir / EvalType.CHEM.value
         actual_files = chem_run_dir.rglob("*")
         assert set([ii.name for ii in actual_files]) == {
