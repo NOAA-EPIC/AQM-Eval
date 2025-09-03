@@ -12,6 +12,7 @@ def test_help() -> None:
     for subcommand in ("time-varying", "srw-fixed"):
         result = runner.invoke(app, [subcommand, "--help"], catch_exceptions=False)
         print(result.output)
+        assert result.exit_code == 0
 
 
 def test_time_varying_use_case(tmp_path: Path) -> None:
