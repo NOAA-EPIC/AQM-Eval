@@ -7,7 +7,7 @@ from aqm_eval.aqm_mm_eval.driver.interface import (
     ChemEvalPackage,
     TaskKey,
 )
-from aqm_eval.logging_aqm_eval import LOGGER
+from aqm_eval.logging_aqm_eval import LOGGER, log_it
 
 import matplotlib
 
@@ -22,8 +22,8 @@ class MMEvalRunner(BaseModel):
 
     iface: SRWInterface
 
+    @log_it
     def initialize(self) -> None:
-        LOGGER("initializing MMEvalRunner")
         LOGGER(f"{self.iface=}")
         LOGGER("creating symlinks")
         create_symlinks(
@@ -37,6 +37,7 @@ class MMEvalRunner(BaseModel):
         LOGGER("creating MM control configs")
         self.iface.create_control_configs()
 
+    @log_it
     def run(self, package_selector: tuple[PackageKey, ...] = tuple(PackageKey),
             task_selector: tuple[TaskKey, ...] = tuple(TaskKey), finalize: bool = False) -> None:
         LOGGER("running MMEvalRunner")
@@ -81,5 +82,6 @@ class MMEvalRunner(BaseModel):
             if finalize:
                 self.finalize()
 
+    @log_it
     def finalize(self) -> None:
         LOGGER("finalizing MMEvalRunner")
