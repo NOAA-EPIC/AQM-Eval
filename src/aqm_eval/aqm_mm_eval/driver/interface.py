@@ -1,68 +1,21 @@
 import logging
 from datetime import datetime
-from enum import StrEnum, unique
 from functools import cached_property
 from pathlib import Path
-from typing import Annotated, Any, Iterator
+from typing import Any
 
 import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
-from pydantic import BaseModel, BeforeValidator, computed_field
+from pydantic import BaseModel, computed_field
 
+from aqm_eval.aqm_mm_eval.driver.helpers import PathExisting
+from aqm_eval.aqm_mm_eval.driver.package import PackageKey, ChemEvalPackage
 from aqm_eval.logging_aqm_eval import LOGGER
-
-
-@unique
-class TaskKey(StrEnum):
-    SAVE_PAIRED = "save_paired"
-    TIMESERIES = "timeseries"
-    TAYLOR = "taylor"
-    SPATIAL_BIAS = "spatial_bias"
-    SPATIAL_OVERLAY = "spatial_overlay"
-    BOXPLOT = "boxplot"
-    MULTI_BOXPLOT = "multi_boxplot"
-    SCORECARD_RMSE = "scorecard_rmse"  # tdk: handle situation with multiple models where scorecards make sense
-    SCORECARD_IOA = "scorecard_ioa"
-    SCORECARD_NMB = "scorecard_nmb"
-    SCORECARD_NME = "scorecard_nme"
-    CSI = "csi"
-    STATS = "stats"
-
-
-def _format_path_existing_(value: Path | str) -> Path:
-    ret = Path(value)
-    if not ret.exists():
-        raise ValueError(f"path does not exist: {ret}")
-    return ret
 
 
 def _convert_date_string_to_mm_(date_str: str) -> str:
     dt = datetime.strptime(date_str, "%Y%m%d%H")
     return dt.strftime("%Y-%m-%d-%H:00:00")
-
-
-PathExisting = Annotated[Path, BeforeValidator(_format_path_existing_)]
-
-
-@unique
-class PackageKey(StrEnum):
-    CHEM = "chem"
-    MET = "met"
-    AQS_PM25 = "aqs_pm25"
-    VOCS = "vocs"
-
-
-class ChemEvalPackage(BaseModel):
-    model_config = {"frozen": True}
-    root_dir: Path
-    key: PackageKey = PackageKey.CHEM
-    namelist_template: str = "namelist.chem.j2"
-    tasks: tuple[TaskKey, ...] = tuple([ii for ii in TaskKey if not ii.name.startswith("SCORECARD")]) #tdk: handle scorecard scenario
-
-    @computed_field
-    @property
-    def run_dir(self) -> Path:
-        return self.root_dir / self.key.value
 
 class SRWInterface(BaseModel):
     model_config = {"frozen": True}
@@ -104,7 +57,7 @@ class SRWInterface(BaseModel):
     @computed_field
     @property
     def mm_output_dir(self) -> PathExisting:
-        config_path = self.find_nested_key(("task_mm_pre_chem_eval", "MM_OUTPUT_DIR"))
+        config_path = self.find_nested_key(("task_melodies_monet_prep", "MM_OUTPUT_DIR"))
         if config_path is None:
             config_path = self.expt_dir / "mm_output"
         if not config_path.exists():
@@ -125,7 +78,7 @@ class SRWInterface(BaseModel):
             [
                 PackageKey(ii)
                 for ii in self.find_nested_key(
-                    ("task_mm_pre_chem_eval", "MM_EVAL_TYPES")
+                    ("task_melodies_monet_prep", "MM_EVAL_TYPES")
                 )
             ]
         )
@@ -133,13 +86,13 @@ class SRWInterface(BaseModel):
     @computed_field
     @property
     def mm_eval_prefix(self) -> str:
-        return self.find_nested_key(("task_mm_pre_chem_eval", "MM_EVAL_PREFIX"))
+        return self.find_nested_key(("task_melodies_monet_prep", "MM_EVAL_PREFIX"))
 
     @computed_field
     @property
     def mm_obs_airnow_fn_template(self) -> str:
         return self.find_nested_key(
-            ("task_mm_pre_chem_eval", "MM_OBS_AIRNOW_FN_TEMPLATE")
+            ("task_melodies_monet_prep", "MM_OBS_AIRNOW_FN_TEMPLATE")
         )
 
     @computed_field

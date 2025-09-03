@@ -3,10 +3,8 @@ from pydantic import BaseModel
 from aqm_eval.aqm_mm_eval.driver.helpers import create_symlinks
 from aqm_eval.aqm_mm_eval.driver.interface import (
     SRWInterface,
-    PackageKey,
-    ChemEvalPackage,
-    TaskKey,
 )
+from aqm_eval.aqm_mm_eval.driver.package import TaskKey, PackageKey, ChemEvalPackage
 from aqm_eval.logging_aqm_eval import LOGGER, log_it
 
 import matplotlib

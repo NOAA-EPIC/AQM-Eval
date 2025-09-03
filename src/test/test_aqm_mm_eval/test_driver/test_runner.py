@@ -1,4 +1,5 @@
-from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface, PackageKey
+from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface
+from aqm_eval.aqm_mm_eval.driver.package import PackageKey
 from aqm_eval.aqm_mm_eval.driver.runner import MMEvalRunner
 
 
