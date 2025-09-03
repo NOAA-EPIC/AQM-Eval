@@ -1,9 +1,10 @@
 import platform
 from pathlib import Path
 
-from aqm_eval.logging_aqm_eval import LOGGER
+from aqm_eval.logging_aqm_eval import LOGGER, log_it
 
 
+@log_it
 def create_symlinks(
     src_dir: Path,
     dst_dir: Path,

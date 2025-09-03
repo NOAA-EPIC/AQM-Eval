@@ -25,6 +25,7 @@ class MMEvalRunner(BaseModel):
     @log_it
     def initialize(self) -> None:
         LOGGER(f"{self.iface=}")
+
         LOGGER("creating symlinks")
         create_symlinks(
             self.iface.expt_dir,
@@ -40,7 +41,6 @@ class MMEvalRunner(BaseModel):
     @log_it
     def run(self, package_selector: tuple[PackageKey, ...] = tuple(PackageKey),
             task_selector: tuple[TaskKey, ...] = tuple(TaskKey), finalize: bool = False) -> None:
-        LOGGER("running MMEvalRunner")
         try:
             matplotlib.use("Agg")
             # tdk: need to set cartopy directory from configs
@@ -84,4 +84,4 @@ class MMEvalRunner(BaseModel):
 
     @log_it
     def finalize(self) -> None:
-        LOGGER("finalizing MMEvalRunner")
+        ...
