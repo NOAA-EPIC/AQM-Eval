@@ -48,9 +48,11 @@ class MMEvalRunner(BaseModel):
             )
             dask.config.set(**{"array.slicing.split_large_chunks": True})
             for package in self.iface.mm_packages:
+                LOGGER(f"{package.key=}")
                 if package.key not in package_selector:
                     continue
                 for task in task_selector:
+                    LOGGER(f"{task=}")
                     if task not in task_selector:
                         continue
                     an = driver.analysis()
