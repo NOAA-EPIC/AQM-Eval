@@ -50,7 +50,7 @@ class MMEvalRunner(BaseModel):
                 LOGGER(f"{package.key=}")
                 if package.key not in package_selector:
                     continue
-                for task in task_selector:
+                for task in package.tasks:
                     LOGGER(f"{task=}")
                     if task not in task_selector:
                         continue
