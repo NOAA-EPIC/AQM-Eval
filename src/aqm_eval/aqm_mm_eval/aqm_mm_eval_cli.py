@@ -4,6 +4,7 @@ from pathlib import Path
 import typer
 
 from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface
+from aqm_eval.aqm_mm_eval.driver.package import TaskKey
 from aqm_eval.aqm_mm_eval.driver.runner import MMEvalRunner
 
 os.environ["NO_COLOR"] = "1"
@@ -27,11 +28,12 @@ def srw_init(
     help="Run the MELODIES-MONET UFS-AQM evaluation from the SRW workflow.",
 )
 def srw_run(
-    expt_dir: Path = typer.Option(..., "--expt-dir", help="Experiment directory.")
+    expt_dir: Path = typer.Option(..., "--expt-dir", help="Experiment directory."),
+    task_selector: list[TaskKey] | None = typer.Option(..., "--task-selector", help="Task selector.")
 ):
     iface = SRWInterface(expt_dir=expt_dir)
     runner = MMEvalRunner(iface=iface)
-    runner.run()
+    runner.run(task_selector=tuple(task_selector))
 
 
 if __name__ == "__main__":
