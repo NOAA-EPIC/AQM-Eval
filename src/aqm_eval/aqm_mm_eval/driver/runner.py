@@ -51,9 +51,9 @@ class MMEvalRunner(BaseModel):
                 if package.key not in package_selector:
                     continue
                 for task in package.tasks:
-                    LOGGER(f"{task=}")
                     if task not in task_selector:
                         continue
+                    LOGGER(f"{task=}")
                     an = driver.analysis()
                     control_yaml = self.iface.mm_run_dir / package.key.value / f"control_{task.value}.yaml"
                     LOGGER(f"{control_yaml=}")

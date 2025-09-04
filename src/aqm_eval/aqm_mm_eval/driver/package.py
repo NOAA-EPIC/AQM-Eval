@@ -36,9 +36,17 @@ class ChemEvalPackage(BaseModel):
     root_dir: PathExisting
     key: PackageKey = PackageKey.CHEM
     namelist_template: str = "namelist.chem.j2"
-    tasks: tuple[TaskKey, ...] = tuple([ii for ii in TaskKey if not ii.name.startswith("SCORECARD")]) #tdk: handle scorecard scenario
 
     @computed_field
     @property
     def run_dir(self) -> Path:
         return self.root_dir / self.key.value
+
+    @computed_field
+    @property
+    def tasks(self) -> tuple[TaskKey, ...]:
+        return self.get_default_tasks()
+
+    @classmethod
+    def get_default_tasks(cls) -> tuple[TaskKey, ...]:
+        return tuple([ii for ii in TaskKey if not ii.name.startswith("SCORECARD")]) #tdk: handle scorecard scenario
