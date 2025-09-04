@@ -78,7 +78,7 @@ class SRWInterface(BaseModel):
             [
                 PackageKey(ii)
                 for ii in self.find_nested_key(
-                    ("task_melodies_monet_prep", "MM_EVAL_TYPES")
+                    ("task_melodies_monet_prep", "MM_EVAL_PACKAGES")
                 )
             ]
         )
