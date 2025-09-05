@@ -165,12 +165,21 @@ class SRWInterface(BaseModel):
             Model(
                 expt_dir=self.expt_dir,
                 label="eval_aqm",
+                title="Eval AQM",
                 prefix="eval",
                 role=ModelRole.EVAL,
                 dyn_file_template=("dynf*.nc",),
                 cycle_dir_template=self.link_simulation,
             ),
         )
+
+    @cached_property
+    def mm_model_labels(self) -> list[str]:
+        return [mm_model.label for mm_model in self.mm_models]
+
+    @cached_property
+    def mm_model_titles_j2(self) -> str:
+        return ", ".join([f'"{ii.title}"' for ii in self.mm_models])
 
     def create_control_configs(self) -> None:
         for package in self.mm_packages:
@@ -188,12 +197,23 @@ class SRWInterface(BaseModel):
             )
             cfg = iface.model_dump()
             cfg["mm_tasks"] = [ii.value for ii in package.tasks]
+            cfg["mm_models"] = self.mm_models
+            cfg["mm_model_labels"] = self.mm_model_labels
+            cfg["mm_model_titles_j2"] = self.mm_model_titles_j2
             namelist_config_str = env.get_template(package.namelist_template).render(
                 cfg
             )
             namelist_config = yaml.safe_load(namelist_config_str)
             with open(package_run_dir / "namelist.yaml", "w") as f:
                 f.write(namelist_config_str)
+
+            #tdk:rm
+            try:
+                with open(r"C:\Users\bkozi\Dropbox\dtmp\namelist.yaml", "w") as f:
+                    f.write(namelist_config_str)
+            except:
+                pass
+
             for task in cfg["mm_tasks"]:
                 LOGGER(f"{task=}")
                 template = env.get_template(f"template_{task}.j2")

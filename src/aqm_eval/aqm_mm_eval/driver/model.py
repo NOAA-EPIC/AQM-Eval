@@ -17,6 +17,7 @@ class Model(BaseModel):
 
     expt_dir: PathExisting
     label: str
+    title: str
     prefix: str
     role: ModelRole
     cycle_dir_template: tuple[str, ...]
