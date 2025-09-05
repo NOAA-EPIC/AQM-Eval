@@ -15,7 +15,9 @@ app = typer.Typer(pretty_exceptions_enable=False)
     name="srw-init",
     help="Initialize the MELODIES-MONET UFS-AQM evaluation from the SRW workflow.",
 )
-def srw_init(expt_dir: Path = typer.Option(..., "--expt-dir", help="Experiment directory.")):
+def srw_init(
+    expt_dir: Path = typer.Option(..., "--expt-dir", help="Experiment directory.")
+):
     iface = SRWInterface(expt_dir=expt_dir)
     runner = MMEvalRunner(iface=iface)
     runner.initialize()
@@ -27,8 +29,12 @@ def srw_init(expt_dir: Path = typer.Option(..., "--expt-dir", help="Experiment d
 )
 def srw_run(
     expt_dir: Path = typer.Option(..., "--expt-dir", help="Experiment directory."),
-    package_selector: list[PackageKey] | None = typer.Option(..., "--package-selector", help="Package selector."),
-    task_selector: list[TaskKey] | None = typer.Option(..., "--task-selector", help="Task selector."),
+    package_selector: list[PackageKey] | None = typer.Option(
+        None, "--package-selector", help="Package selector."
+    ),
+    task_selector: list[TaskKey] | None = typer.Option(
+        None, "--task-selector", help="Task selector."
+    ),
 ):
     iface = SRWInterface(expt_dir=expt_dir)
     runner = MMEvalRunner(iface=iface)

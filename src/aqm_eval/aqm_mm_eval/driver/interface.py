@@ -9,6 +9,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from pydantic import BaseModel, computed_field
 
 from aqm_eval.aqm_mm_eval.driver.helpers import PathExisting
+from aqm_eval.aqm_mm_eval.driver.model import Model, ModelRole
 from aqm_eval.aqm_mm_eval.driver.package import PackageKey, ChemEvalPackage
 from aqm_eval.logging_aqm_eval import LOGGER
 
@@ -17,12 +18,11 @@ def _convert_date_string_to_mm_(date_str: str) -> str:
     dt = datetime.strptime(date_str, "%Y%m%d%H")
     return dt.strftime("%Y-%m-%d-%H:00:00")
 
+
 class SRWInterface(BaseModel):
     model_config = {"frozen": True}
 
     expt_dir: PathExisting
-
-    dyn_file_template: str = "dynf*.nc"
 
     @computed_field
     @property
@@ -57,7 +57,9 @@ class SRWInterface(BaseModel):
     @computed_field
     @property
     def mm_output_dir(self) -> PathExisting:
-        config_path = self.find_nested_key(("task_melodies_monet_prep", "MM_OUTPUT_DIR"))
+        config_path = self.find_nested_key(
+            ("task_melodies_monet_prep", "MM_OUTPUT_DIR")
+        )
         if config_path is None:
             config_path = self.expt_dir / "mm_output"
         if not config_path.exists():
@@ -83,10 +85,10 @@ class SRWInterface(BaseModel):
             ]
         )
 
-    @computed_field
-    @property
-    def mm_eval_prefix(self) -> str:
-        return self.find_nested_key(("task_melodies_monet_prep", "MM_EVAL_PREFIX"))
+    # @computed_field
+    # @property
+    # def mm_eval_prefix(self) -> str:
+    #     return self.find_nested_key(("task_melodies_monet_prep", "MM_EVAL_PREFIX"))
 
     @computed_field
     @property
@@ -157,6 +159,19 @@ class SRWInterface(BaseModel):
     def yaml_srw_config_paths(self) -> tuple[PathExisting, ...]:
         return self.config_path_user, self.config_path_rocoto
 
+    @cached_property
+    def mm_models(self) -> tuple[Model, ...]:
+        return (
+            Model(
+                expt_dir=self.expt_dir,
+                label="eval_aqm",
+                prefix="eval",
+                role=ModelRole.EVAL,
+                dyn_file_template=("dynf*.nc",),
+                cycle_dir_template=self.link_simulation,
+            ),
+        )
+
     def create_control_configs(self) -> None:
         for package in self.mm_packages:
             iface = self
@@ -167,10 +182,15 @@ class SRWInterface(BaseModel):
             if not package_run_dir.exists():
                 LOGGER(f"{package_run_dir=} does not exist. creating.")
                 package_run_dir.mkdir(exist_ok=True, parents=True)
-            env = Environment(loader=FileSystemLoader(searchpath=searchpath), undefined=StrictUndefined)
+            env = Environment(
+                loader=FileSystemLoader(searchpath=searchpath),
+                undefined=StrictUndefined,
+            )
             cfg = iface.model_dump()
             cfg["mm_tasks"] = [ii.value for ii in package.tasks]
-            namelist_config_str = env.get_template(package.namelist_template).render(cfg)
+            namelist_config_str = env.get_template(package.namelist_template).render(
+                cfg
+            )
             namelist_config = yaml.safe_load(namelist_config_str)
             with open(package_run_dir / "namelist.yaml", "w") as f:
                 f.write(namelist_config_str)

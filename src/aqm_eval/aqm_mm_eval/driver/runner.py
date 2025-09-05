@@ -21,14 +21,8 @@ class MMEvalRunner(BaseModel):
     def initialize(self) -> None:
         LOGGER(f"{self.iface=}")
 
-        LOGGER("creating symlinks")
-        create_symlinks(
-            self.iface.expt_dir,
-            self.iface.link_alldays_path,
-            self.iface.mm_eval_prefix,
-            self.iface.link_simulation,
-            (self.iface.dyn_file_template,),
-        )
+        for model in self.iface.mm_models:
+            model.create_symlinks(self.iface.link_alldays_path)
 
         LOGGER("creating MM control configs")
         self.iface.create_control_configs()
