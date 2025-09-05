@@ -195,11 +195,15 @@ class SRWInterface(BaseModel):
                 loader=FileSystemLoader(searchpath=searchpath),
                 undefined=StrictUndefined,
             )
-            cfg = iface.model_dump()
-            cfg["mm_tasks"] = [ii.value for ii in package.tasks]
-            cfg["mm_models"] = self.mm_models
-            cfg["mm_model_labels"] = self.mm_model_labels
-            cfg["mm_model_titles_j2"] = self.mm_model_titles_j2
+
+            #tdk:rm
+            # cfg = iface.model_dump()
+            # cfg["mm_tasks"] = [ii.value for ii in package.tasks]
+            # cfg["mm_models"] = self.mm_models
+            # cfg["mm_model_labels"] = self.mm_model_labels
+            # cfg["mm_model_titles_j2"] = self.mm_model_titles_j2
+
+            cfg = {"iface": self, "mm_tasks": [ii.value for ii in package.tasks]}
             namelist_config_str = env.get_template(package.namelist_template).render(
                 cfg
             )
