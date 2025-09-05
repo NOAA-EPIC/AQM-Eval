@@ -1,10 +1,11 @@
+import pytest
+
 from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface
 from aqm_eval.aqm_mm_eval.driver.package import PackageKey
 from aqm_eval.aqm_mm_eval.driver.runner import MMEvalRunner
 
 
 class TestMMEvalRunner:
-
     def test(self, srw_interface: SRWInterface) -> None:
         runner = MMEvalRunner(iface=srw_interface)
 
@@ -31,8 +32,7 @@ class TestMMEvalRunner:
             "control_boxplot.yaml",
         }
 
-        runner.run()
-
-        tdk
-
-        # runner.run(finalize=True)
+        # tdk: real test?
+        with pytest.raises(ValueError) as excinfo:
+            runner.run()
+        assert str(excinfo.value).startswith("did not find a match in any of xarray's currently installed IO backends")

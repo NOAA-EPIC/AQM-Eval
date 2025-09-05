@@ -1,18 +1,15 @@
+import cartopy
+import dask
+import matplotlib
+from melodies_monet import driver
 from pydantic import BaseModel
 
 from aqm_eval.aqm_mm_eval.driver.helpers import create_symlinks
 from aqm_eval.aqm_mm_eval.driver.interface import (
     SRWInterface,
 )
-from aqm_eval.aqm_mm_eval.driver.package import TaskKey, PackageKey, ChemEvalPackage
+from aqm_eval.aqm_mm_eval.driver.package import PackageKey, TaskKey
 from aqm_eval.logging_aqm_eval import LOGGER, log_it
-
-import matplotlib
-
-
-from melodies_monet import driver
-import dask
-import cartopy
 
 
 class MMEvalRunner(BaseModel):
@@ -37,14 +34,16 @@ class MMEvalRunner(BaseModel):
         self.iface.create_control_configs()
 
     @log_it
-    def run(self, package_selector: tuple[PackageKey, ...] = tuple(PackageKey),
-            task_selector: tuple[TaskKey, ...] = tuple(TaskKey), finalize: bool = False) -> None:
+    def run(
+        self,
+        package_selector: tuple[PackageKey, ...] | list[PackageKey] = tuple(PackageKey),
+        task_selector: tuple[TaskKey, ...] | list[TaskKey] = tuple(TaskKey),
+        finalize: bool = False,
+    ) -> None:
         try:
             matplotlib.use("Agg")
             # tdk: need to set cartopy directory from configs
-            cartopy.config["data_dir"] = (
-                "/gpfs/f6/bil-fire8/world-shared/UFS_SRW_data/develop/NaturalEarth"
-            )
+            cartopy.config["data_dir"] = "/gpfs/f6/bil-fire8/world-shared/UFS_SRW_data/develop/NaturalEarth"
             dask.config.set(**{"array.slicing.split_large_chunks": True})
             for package in self.iface.mm_packages:
                 LOGGER(f"{package.key=}")
@@ -81,5 +80,4 @@ class MMEvalRunner(BaseModel):
                 self.finalize()
 
     @log_it
-    def finalize(self) -> None:
-        ...
+    def finalize(self) -> None: ...
