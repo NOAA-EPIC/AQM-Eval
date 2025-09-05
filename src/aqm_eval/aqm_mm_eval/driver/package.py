@@ -49,4 +49,6 @@ class ChemEvalPackage(BaseModel):
 
     @classmethod
     def get_default_tasks(cls) -> tuple[TaskKey, ...]:
-        return tuple([ii for ii in TaskKey if not ii.name.startswith("SCORECARD")]) #tdk: handle scorecard scenario
+        # return tuple([ii for ii in TaskKey if not ii.name.startswith("SCORECARD")]) #tdk: handle scorecard scenario
+        #tdk: option to enable scorecard tasks
+        return tuple([ii for ii in TaskKey]) #tdk: handle scorecard scenario

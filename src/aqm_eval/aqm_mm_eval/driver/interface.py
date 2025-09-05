@@ -10,7 +10,7 @@ from pydantic import BaseModel, computed_field
 
 from aqm_eval.aqm_mm_eval.driver.helpers import PathExisting
 from aqm_eval.aqm_mm_eval.driver.model import Model, ModelRole
-from aqm_eval.aqm_mm_eval.driver.package import PackageKey, ChemEvalPackage
+from aqm_eval.aqm_mm_eval.driver.package import PackageKey, ChemEvalPackage, TaskKey
 from aqm_eval.logging_aqm_eval import LOGGER
 
 
@@ -171,6 +171,17 @@ class SRWInterface(BaseModel):
                 dyn_file_template=("dynf*.nc",),
                 cycle_dir_template=self.link_simulation,
             ),
+            #tdk: add option to control if the model is evaluated against a base
+            #tdk: ensure this is never more than two and enums are different
+            Model(
+                expt_dir=self.expt_dir,
+                label="base_aqm",
+                title="Base AQM",
+                prefix="base",
+                role=ModelRole.BASE,
+                dyn_file_template=("dynf*.nc",),
+                cycle_dir_template=self.link_simulation,
+            ),
         )
 
     @cached_property
@@ -196,7 +207,7 @@ class SRWInterface(BaseModel):
                 undefined=StrictUndefined,
             )
 
-            #tdk:rm
+            # tdk:rm
             # cfg = iface.model_dump()
             # cfg["mm_tasks"] = [ii.value for ii in package.tasks]
             # cfg["mm_models"] = self.mm_models
@@ -204,6 +215,7 @@ class SRWInterface(BaseModel):
             # cfg["mm_model_titles_j2"] = self.mm_model_titles_j2
 
             cfg = {"iface": self, "mm_tasks": [ii.value for ii in package.tasks]}
+
             namelist_config_str = env.get_template(package.namelist_template).render(
                 cfg
             )
@@ -211,7 +223,7 @@ class SRWInterface(BaseModel):
             with open(package_run_dir / "namelist.yaml", "w") as f:
                 f.write(namelist_config_str)
 
-            #tdk:rm
+            # tdk:rm
             try:
                 with open(r"C:\Users\bkozi\Dropbox\dtmp\namelist.yaml", "w") as f:
                     f.write(namelist_config_str)
@@ -219,6 +231,18 @@ class SRWInterface(BaseModel):
                 pass
 
             for task in cfg["mm_tasks"]:
+
+                match task:
+                    case TaskKey.SCORECARD_RMSE:
+                        namelist_config["scorecard_eval_method"] = '"RMSE"'
+                    case TaskKey.SCORECARD_IOA:
+                        namelist_config["scorecard_eval_method"] = '"IOA"'
+                    case TaskKey.SCORECARD_NMB:
+                        namelist_config["scorecard_eval_method"] = '"NMB"'
+                    case TaskKey.SCORECARD_NME:
+                        namelist_config["scorecard_eval_method"] = '"NME"'
+
+
                 LOGGER(f"{task=}")
                 template = env.get_template(f"template_{task}.j2")
                 LOGGER(f"{template=}")
