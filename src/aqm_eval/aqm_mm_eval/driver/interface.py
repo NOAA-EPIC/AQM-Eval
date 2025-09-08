@@ -118,11 +118,6 @@ class SRWInterface(BaseModel):
 
     @computed_field
     @property
-    def link_alldays_path_template(self) -> str:
-        return str(self.link_alldays_path / "*.nc")
-
-    @computed_field
-    @property
     def template_dir(self) -> PathExisting:
         return (Path(__file__).parent.parent / "yaml_template").absolute().resolve()
 
@@ -170,9 +165,10 @@ class SRWInterface(BaseModel):
                 role=ModelRole.EVAL,
                 dyn_file_template=("dynf*.nc",),
                 cycle_dir_template=self.link_simulation,
+                link_alldays_path=self.link_alldays_path,
             ),
-            #tdk: add option to control if the model is evaluated against a base
-            #tdk: ensure this is never more than two and enums are different
+            # tdk: add option to control if the model is evaluated against a base
+            # tdk: ensure this is never more than two and enums are different
             Model(
                 expt_dir=self.expt_dir,
                 label="base_aqm",
@@ -181,6 +177,7 @@ class SRWInterface(BaseModel):
                 role=ModelRole.BASE,
                 dyn_file_template=("dynf*.nc",),
                 cycle_dir_template=self.link_simulation,
+                link_alldays_path=self.link_alldays_path,
             ),
         )
 
@@ -241,7 +238,6 @@ class SRWInterface(BaseModel):
                         namelist_config["scorecard_eval_method"] = '"NMB"'
                     case TaskKey.SCORECARD_NME:
                         namelist_config["scorecard_eval_method"] = '"NME"'
-
 
                 LOGGER(f"{task=}")
                 template = env.get_template(f"template_{task}.j2")

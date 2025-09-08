@@ -22,7 +22,7 @@ class MMEvalRunner(BaseModel):
         LOGGER(f"{self.iface=}")
 
         for model in self.iface.mm_models:
-            model.create_symlinks(self.iface.link_alldays_path)
+            model.create_symlinks()
 
         LOGGER("creating MM control configs")
         self.iface.create_control_configs()

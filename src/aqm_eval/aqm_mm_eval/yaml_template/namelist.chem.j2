@@ -63,7 +63,7 @@ paired_dataset:
 {% for mm_model in iface.mm_models %}
 # ==== Model - {{ mm_model.role.value }} ==== #tdk:varying (this should allow for two possible models)
 model_{{ mm_model.role.value }}_label: {{ mm_model.label }} #tdk:varying
-model_{{ mm_model.role.value }}_files: {{ iface.link_alldays_path_template }} #tdk:varying
+model_{{ mm_model.role.value }}_files: {{ mm_model.link_alldays_path_template }} #tdk:varying
 model_{{ mm_model.role.value }}_type: '"rrfs"'
 model_{{ mm_model.role.value }}_kwargs:
   surf_only: True
