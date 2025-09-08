@@ -34,6 +34,7 @@ class PackageKey(StrEnum):
 class ChemEvalPackage(BaseModel):
     model_config = {"frozen": True}
     root_dir: PathExisting
+    use_base_model: bool
     key: PackageKey = PackageKey.CHEM
     namelist_template: str = "namelist.chem.j2"
 
@@ -45,10 +46,7 @@ class ChemEvalPackage(BaseModel):
     @computed_field
     @property
     def tasks(self) -> tuple[TaskKey, ...]:
-        return self.get_default_tasks()
-
-    @classmethod
-    def get_default_tasks(cls) -> tuple[TaskKey, ...]:
-        # return tuple([ii for ii in TaskKey if not ii.name.startswith("SCORECARD")]) #tdk: handle scorecard scenario
-        #tdk: option to enable scorecard tasks
-        return tuple([ii for ii in TaskKey]) #tdk: handle scorecard scenario
+        if self.use_base_model:
+            return tuple([ii for ii in TaskKey])
+        else:
+            return tuple([ii for ii in TaskKey if not ii.name.startswith("SCORECARD")])

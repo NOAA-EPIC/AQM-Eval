@@ -121,16 +121,22 @@ class SRWInterface(BaseModel):
     def template_dir(self) -> PathExisting:
         return (Path(__file__).parent.parent / "yaml_template").absolute().resolve()
 
+    @computed_field
+    @property
+    def mm_base_model_expt_dir(self) -> PathExisting | None:
+        return self.find_nested_key(("task_melodies_monet_prep", "MM_BASE_MODEL_EXPT_DIR"))
+
     @cached_property
     def mm_packages(self) -> tuple[ChemEvalPackage, ...]:
         ret = []
+        use_base_model = self.mm_base_model_expt_dir is not None
         for package_key in self.mm_package_keys:
             match package_key:
                 case PackageKey.CHEM:
                     klass = ChemEvalPackage
                 case _:
                     raise ValueError(package_key)
-            ret.append(klass(root_dir=self.mm_run_dir))
+            ret.append(klass(root_dir=self.mm_run_dir, use_base_model=use_base_model))
         return tuple(ret)
 
     @cached_property
@@ -156,7 +162,7 @@ class SRWInterface(BaseModel):
 
     @cached_property
     def mm_models(self) -> tuple[Model, ...]:
-        return (
+        ret = [
             Model(
                 expt_dir=self.expt_dir,
                 label="eval_aqm",
@@ -165,21 +171,20 @@ class SRWInterface(BaseModel):
                 role=ModelRole.EVAL,
                 dyn_file_template=("dynf*.nc",),
                 cycle_dir_template=self.link_simulation,
-                link_alldays_path=self.link_alldays_path,
-            ),
-            # tdk: add option to control if the model is evaluated against a base
-            # tdk: ensure this is never more than two and enums are different
-            Model(
-                expt_dir=self.expt_dir,
-                label="base_aqm",
-                title="Base AQM",
-                prefix="base",
-                role=ModelRole.BASE,
-                dyn_file_template=("dynf*.nc",),
-                cycle_dir_template=self.link_simulation,
-                link_alldays_path=self.link_alldays_path,
-            ),
-        )
+                link_alldays_path=self.link_alldays_path)
+            ]
+        if self.mm_base_model_expt_dir is not None:
+                ret.append(Model(
+                    expt_dir=self.expt_dir,
+                    label="base_aqm",
+                    title="Base AQM",
+                    prefix="base",
+                    role=ModelRole.BASE,
+                    dyn_file_template=("dynf*.nc",),
+                    cycle_dir_template=self.link_simulation,
+                    link_alldays_path=self.link_alldays_path,
+                ))
+        return tuple(ret)
 
     @cached_property
     def mm_model_labels(self) -> list[str]:

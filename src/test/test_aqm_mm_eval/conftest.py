@@ -6,10 +6,22 @@ import yaml
 from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface
 
 
-@pytest.fixture(autouse=True)
-def config_path_user(tmp_path: Path) -> Path:
+@pytest.fixture(params=[True, False], ids=lambda x: f"use_base_model={x}")
+def use_base_model(request) -> bool:
+    return request.param
+
+@pytest.fixture
+def expt_dir(tmp_path: Path, use_base_model: bool) -> Path:
+    ret = tmp_path / f"use_base_model-{use_base_model}"
+    ret.mkdir(exist_ok=False, parents=True)
+    return ret
+
+@pytest.fixture()
+def config_path_user(expt_dir: Path, use_base_model: bool) -> Path:
     yaml_content = {
-        "metadata": {"description": "config for SRW-AQM, AQM_NA_13km, AEROMMA field campaign"},
+        "metadata": {
+            "description": "config for SRW-AQM, AQM_NA_13km, AEROMMA field campaign"
+        },
         "user": {"RUN_ENVIR": "community", "MACHINE": "GAEAC6", "ACCOUNT": "bil-fire8"},
         "workflow": {
             "USE_CRON_TO_RELAUNCH": True,
@@ -20,31 +32,36 @@ def config_path_user(tmp_path: Path) -> Path:
             "DATE_FIRST_CYCL": "2023060112",
             "DATE_LAST_CYCL": "2023060212",
         },
-        "task_melodies_monet_prep": {"MM_OUTPUT_DIR": None, "MM_EVAL_PACKAGES": ["chem"], "MM_OBS_AIRNOW_FN_TEMPLATE": "AirNow_20230601_20230701.nc"},
+        "task_melodies_monet_prep": {
+            "MM_OUTPUT_DIR": None,
+            "MM_EVAL_PACKAGES": ["chem"],
+            "MM_OBS_AIRNOW_FN_TEMPLATE": "AirNow_20230601_20230701.nc",
+            "MM_BASE_MODEL_EXPT_DIR": str(expt_dir) if use_base_model else None,
+        },
     }
 
-    yaml_path = tmp_path / "config.yaml"
+    yaml_path = expt_dir / "config.yaml"
     with open(yaml_path, "w") as f:
         yaml.dump(yaml_content, f)
 
     return yaml_path
 
 
-@pytest.fixture(autouse=True)
-def config_path_rocoto(tmp_path: Path) -> Path:
+@pytest.fixture()
+def config_path_rocoto(expt_dir: Path) -> Path:
     yaml_content = {"foo": "bar", "foo2": {"second": "baz"}}
 
-    yaml_path = tmp_path / "rocoto_defns.yaml"
+    yaml_path = expt_dir / "rocoto_defns.yaml"
     with open(yaml_path, "w") as f:
         yaml.dump(yaml_content, f)
 
     return yaml_path
 
 
-@pytest.fixture(autouse=True)
-def dummy_dyn_files(tmp_path: Path) -> None:
-    for dirname in ['2023060112', '2023060212']:
-        dyn_dir = tmp_path / dirname
+@pytest.fixture()
+def dummy_dyn_files(expt_dir: Path) -> None:
+    for dirname in ["2023060112", "2023060212"]:
+        dyn_dir = expt_dir / dirname
         dyn_dir.mkdir(exist_ok=False, parents=False)
         for fhr in range(25):
             dyn_file = dyn_dir / f"dynf{fhr:03d}.nc"
@@ -52,5 +69,5 @@ def dummy_dyn_files(tmp_path: Path) -> None:
 
 
 @pytest.fixture
-def srw_interface(tmp_path) -> SRWInterface:
-    return SRWInterface(expt_dir=tmp_path)
+def srw_interface(expt_dir: Path, config_path_user: Path, config_path_rocoto: Path, dummy_dyn_files: None) -> SRWInterface:
+    return SRWInterface(expt_dir=expt_dir)
