@@ -108,6 +108,7 @@ def srw_fixed(
     runner = SRWFixedSyncRunner(ctx)
     runner.run()
 
+#tdk: add downloading observations
 
 if __name__ == "__main__":
     app()

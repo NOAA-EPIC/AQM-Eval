@@ -15,7 +15,7 @@ class TaskKey(StrEnum):
     SPATIAL_OVERLAY = "spatial_overlay"
     BOXPLOT = "boxplot"
     MULTI_BOXPLOT = "multi_boxplot"
-    SCORECARD_RMSE = "scorecard_rmse"  # tdk: handle situation with multiple models where scorecards make sense
+    SCORECARD_RMSE = "scorecard_rmse"
     SCORECARD_IOA = "scorecard_ioa"
     SCORECARD_NMB = "scorecard_nmb"
     SCORECARD_NME = "scorecard_nme"
