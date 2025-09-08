@@ -10,11 +10,13 @@ from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface
 def use_base_model(request) -> bool:
     return request.param
 
+
 @pytest.fixture
 def expt_dir(tmp_path: Path, use_base_model: bool) -> Path:
     ret = tmp_path / f"use_base_model-{use_base_model}"
     ret.mkdir(exist_ok=False, parents=True)
     return ret
+
 
 @pytest.fixture()
 def config_path_user(expt_dir: Path, use_base_model: bool) -> Path:
@@ -69,5 +71,10 @@ def dummy_dyn_files(expt_dir: Path) -> None:
 
 
 @pytest.fixture
-def srw_interface(expt_dir: Path, config_path_user: Path, config_path_rocoto: Path, dummy_dyn_files: None) -> SRWInterface:
+def srw_interface(
+    expt_dir: Path,
+    config_path_user: Path,
+    config_path_rocoto: Path,
+    dummy_dyn_files: None,
+) -> SRWInterface:
     return SRWInterface(expt_dir=expt_dir)
