@@ -77,7 +77,7 @@ model_{{ mm_model.role.value }}_mapping:
 model_{{ mm_model.role.value }}_variables: "~"
 model_{{ mm_model.role.value }}_projection: "~"
 model_{{ mm_model.role.value }}_plot_kwargs:
-  color: "forestgreen"
+  color: {{ mm_model.plot_kwargs_color }}
   marker: "^"
   linestyle: "-"
   markersize: 4

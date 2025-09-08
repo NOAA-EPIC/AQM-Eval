@@ -29,6 +29,17 @@ class Model(BaseModel):
     def link_alldays_path_template(self) -> str:
         return str(self.link_alldays_path / f"{self.prefix}*.nc")
 
+    @computed_field
+    @property
+    def plot_kwargs_color(self) -> str:
+        match self.role:
+            case ModelRole.EVAL:
+                return "forestgreen"
+            case ModelRole.BASE:
+                return "magenta"
+            case _:
+                raise ValueError(f"Unknown role: {self.role}")
+
     @log_it
     def create_symlinks(
         self,
