@@ -3,12 +3,7 @@
 
 {% include "mm_model_defns.j2" %}
 
-obs:
-  {{ obs_label }}: # obs label
-    use_airnow: True
-    filename: {{ obs_file }}
-    obs_type: pt_sfc
-    variables: {{ obs_variables }}
+{% include "mm_obs.j2" %}
 
 stats:
   stat_list: {{ stats_score_list }}
