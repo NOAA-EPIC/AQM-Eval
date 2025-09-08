@@ -1,4 +1,4 @@
-# This template is used to generate control_boxplot.yaml for MM application. Airnow surface observation is set as default.  
+# This template is used to generate control_boxplot.yaml for MM application. Airnow surface observation is set as default.
 analysis:
   start_time: {{ start_time }} # yyyy-mm-dd-HH:MM:SS UTC
   end_time: {{ end_time }} # yyyy-mm-dd-HH:MM:SS UTC
@@ -20,7 +20,18 @@ model:
    variables: {{ model_eval_variables }}
    projection: {{ model_eval_projection }}
    plot_kwargs: {{ model_eval_plot_kwargs }}
-
+{% if model_base_label is defined %}
+  {{ model_base_label }}: # model label
+   files: {{ model_base_files }}
+   mod_type: {{ model_base_type }}
+   mod_kwargs: {{ model_base_kwargs }}
+   radius_of_influence: {{ model_base_radius}}
+   mapping:
+     {{ obs_label }}: {{ model_base_mapping }}
+   variables: {{ model_base_variables }}
+   projection: {{ model_base_projection }}
+   plot_kwargs: {{ model_base_plot_kwargs }}
+{% endif %}
 obs:
   {{ obs_label }}: # obs label
     use_airnow: True
