@@ -36,6 +36,11 @@ class SRWInterface(BaseModel):
 
     @computed_field
     @property
+    def config_path_var_defns(self) -> PathExisting:
+        return self.expt_dir / "var_defns.yaml"
+
+    @computed_field
+    @property
     def date_first_cycle_srw(self) -> str:
         return self.find_nested_key(("workflow", "DATE_FIRST_CYCL"))
 
@@ -85,11 +90,6 @@ class SRWInterface(BaseModel):
             ]
         )
 
-    # @computed_field
-    # @property
-    # def mm_eval_prefix(self) -> str:
-    #     return self.find_nested_key(("task_melodies_monet_prep", "MM_EVAL_PREFIX"))
-
     @computed_field
     @property
     def mm_obs_airnow_fn_template(self) -> str:
@@ -126,6 +126,12 @@ class SRWInterface(BaseModel):
     def mm_base_model_expt_dir(self) -> PathExisting | None:
         return self.find_nested_key(("task_melodies_monet_prep", "MM_BASE_MODEL_EXPT_DIR"))
 
+    @computed_field
+    @property
+    def cartopy_data_dir(self) -> PathExisting:
+        #tdk: support with s3 stage directory
+        return PathExisting(self.find_nested_key(("platform", "FIXshp"))).absolute().resolve(strict=True)
+
     @cached_property
     def mm_packages(self) -> tuple[ChemEvalPackage, ...]:
         ret = []
@@ -158,7 +164,7 @@ class SRWInterface(BaseModel):
 
     @cached_property
     def yaml_srw_config_paths(self) -> tuple[PathExisting, ...]:
-        return self.config_path_user, self.config_path_rocoto
+        return self.config_path_user, self.config_path_rocoto, self.config_path_var_defns
 
     @cached_property
     def mm_models(self) -> tuple[Model, ...]:
@@ -174,7 +180,7 @@ class SRWInterface(BaseModel):
                 link_alldays_path=self.link_alldays_path)
             ]
         if self.mm_base_model_expt_dir is not None:
-                ret.append(Model(
+            ret.append(Model(
                     expt_dir=self.expt_dir,
                     label="base_aqm",
                     title="Base AQM",
@@ -208,13 +214,6 @@ class SRWInterface(BaseModel):
                 loader=FileSystemLoader(searchpath=searchpath),
                 undefined=StrictUndefined,
             )
-
-            # tdk:rm
-            # cfg = iface.model_dump()
-            # cfg["mm_tasks"] = [ii.value for ii in package.tasks]
-            # cfg["mm_models"] = self.mm_models
-            # cfg["mm_model_labels"] = self.mm_model_labels
-            # cfg["mm_model_titles_j2"] = self.mm_model_titles_j2
 
             cfg = {"iface": self, "mm_tasks": [ii.value for ii in package.tasks]}
 

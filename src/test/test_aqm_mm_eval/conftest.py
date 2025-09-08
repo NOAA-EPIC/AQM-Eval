@@ -41,22 +41,28 @@ def config_path_user(expt_dir: Path, use_base_model: bool) -> Path:
             "MM_BASE_MODEL_EXPT_DIR": str(expt_dir) if use_base_model else None,
         },
     }
-
     yaml_path = expt_dir / "config.yaml"
     with open(yaml_path, "w") as f:
         yaml.dump(yaml_content, f)
-
     return yaml_path
 
 
 @pytest.fixture()
 def config_path_rocoto(expt_dir: Path) -> Path:
     yaml_content = {"foo": "bar", "foo2": {"second": "baz"}}
-
     yaml_path = expt_dir / "rocoto_defns.yaml"
     with open(yaml_path, "w") as f:
         yaml.dump(yaml_content, f)
+    return yaml_path
 
+@pytest.fixture()
+def config_path_var_defns(tmp_path: Path, expt_dir: Path) -> Path:
+    path = tmp_path / "NaturalEarth"
+    path.mkdir(exist_ok=True, parents=True)
+    yaml_content = {"platform": {"FIXshp": str(path)}}
+    yaml_path = expt_dir / "var_defns.yaml"
+    with open(yaml_path, "w") as f:
+        yaml.dump(yaml_content, f)
     return yaml_path
 
 
@@ -75,6 +81,7 @@ def srw_interface(
     expt_dir: Path,
     config_path_user: Path,
     config_path_rocoto: Path,
+        config_path_var_defns: Path,
     dummy_dyn_files: None,
 ) -> SRWInterface:
     return SRWInterface(expt_dir=expt_dir)

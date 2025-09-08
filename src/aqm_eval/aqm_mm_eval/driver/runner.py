@@ -36,8 +36,7 @@ class MMEvalRunner(BaseModel):
     ) -> None:
         try:
             matplotlib.use("Agg")
-            # tdk: need to set cartopy directory from configs
-            cartopy.config["data_dir"] = "/gpfs/f6/bil-fire8/world-shared/UFS_SRW_data/develop/NaturalEarth"
+            cartopy.config["data_dir"] = self.iface.cartopy_data_dir
             dask.config.set(**{"array.slicing.split_large_chunks": True})
             for package in self.iface.mm_packages:
                 LOGGER(f"{package.key=}")
