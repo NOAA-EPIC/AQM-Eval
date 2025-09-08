@@ -8,25 +8,11 @@
 # ==== General settings ====
 # For MM yamls
 # Time format: yyyy-mm-dd-HH:MM:SS UTC
-start_time: {{ iface.date_first_cycle_mm }} #tdk:varying
-end_time: {{ iface.date_last_cycle_mm }} #tdk:varying
-output_dir: {{ iface.mm_output_dir }} #tdk:varying
-debug_option: True #tdk:varying
+start_time: {{ iface.date_first_cycle_mm }}
+end_time: {{ iface.date_last_cycle_mm }}
+output_dir: {{ iface.mm_output_dir }}
+debug_option: True
 mm_tasks: {{ mm_tasks }}
-# For link_dyns_to_Alldays
-#link_simulation: "202306*/" #tdk:varying
-#link_Alldays_path: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/Alldays #tdk:varying
-##link_base_path: /gpfs/f6/bil-fire3/scratch/Patrick.C.Campbell/expt_dirs/aqmv8p1_testbed_AQMNA13km_warmstart_Feb2024
-##link_base_predix: '"aqmv8p1.dyn"'
-##link_base_target: '"dyn"'
-#link_eval_path: /gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/sandbox/srw/benkozi/aqm-reldeb/expt_dirs/aqm_AQMNA13km_AEROMMA #tdk:varying
-#link_eval_predix: '"dyn"' #tdk:varying
-#link_eval_target: '"dyn"' #tdk:varying
-# For pg8_csi_rename
-#rename_dir: "/gpfs/f6/bil-fire8/scratch/Benjamin.Koziol/tmp/MM-run/output" #tdk:varying
-#rename_date1: '"2023-06-01_12"' #tdk:varying
-#rename_date2: '"2023-06-02_12"' #tdk:varying
-
 
 # ==== Paired file ====
 paired_format: '"netcdf"'
@@ -36,34 +22,11 @@ paired_dataset:
 {%- for mm_model in iface.mm_models %}
   {{ mm_model.label }}: "airnow_{{ mm_model.label }}.nc4"
 {%- endfor %}
-#  airnow_eval_aqmv8p1_metemis: "airnow_eval_aqmv8p1_metemis.nc4"
-
-
-# ==== Model - base ====
-#model_base_label: base_aqmv8p1
-#model_base_files: /gpfs/f6/bil-fire3/scratch/Patrick.C.Campbell/MM-analysis/aqmv8p1_metemis/Alldays/aqmv8p1.dyn_202402*.nc
-#model_base_type: '"rrfs"'
-#model_base_kwargs:
-#  surf_only: True
-#  mech: "cb6r3_ae6_aq"
-#model_base_radius: 20_000
-#model_base_mapping:
-#  o3_ave: "OZONE"
-#  pm25_ave: "PM2.5"
-#  no2_ave: "NO2"
-#  co: "CO"
-#model_base_variables: "~"
-#model_base_projection: "~"
-#model_base_plot_kwargs:
-#  color: "magenta"
-#  marker: "o"
-#  linestyle: "-"
-#  markersize: 4
 
 {% for mm_model in iface.mm_models %}
-# ==== Model - {{ mm_model.role.value }} ==== #tdk:varying (this should allow for two possible models)
-model_{{ mm_model.role.value }}_label: {{ mm_model.label }} #tdk:varying
-model_{{ mm_model.role.value }}_files: {{ mm_model.link_alldays_path_template }} #tdk:varying
+# ==== Model - {{ mm_model.role.value }} ====
+model_{{ mm_model.role.value }}_label: {{ mm_model.label }}
+model_{{ mm_model.role.value }}_files: {{ mm_model.link_alldays_path_template }}
 model_{{ mm_model.role.value }}_type: '"rrfs"'
 model_{{ mm_model.role.value }}_kwargs:
   surf_only: True
@@ -85,7 +48,7 @@ model_{{ mm_model.role.value }}_plot_kwargs:
 
 # ==== Obs (Airnow by default) ====
 obs_label: airnow
-obs_file: {{ iface.mm_obs_airnow_fn_template }} #tdk:varying, need to link to S3 data stage
+obs_file: {{ iface.mm_obs_airnow_fn_template }} #tdk: need to link to S3 data stage
 obs_variables:
   PM2.5:
     unit_scale: 1
@@ -176,7 +139,7 @@ taylor_domain_name: [
   "R1", "R2", "R3", "R4", "R5",
   "R6", "R7", "R8", "R9", "R10",
 ]
-taylor_dataset: {{ iface.mm_model_labels }} #tdk: need to template model name
+taylor_dataset: {{ iface.mm_model_labels }}
 taylor_data_proc:
   rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.
   set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.
@@ -260,7 +223,7 @@ multi_boxplot_urban_rural_name: ["msa_name"]
 multi_boxplot_urban_rural_value: '""'
 multi_boxplot_eval_method: '"NME"'  # support 'RMSE', 'IOA' ,' NMB', 'NME'
 multi_boxplot_dataset: {{ iface.mm_model_labels }}
-multi_boxplot_dataset_label: ["AirNow", {{ iface.mm_model_titles_j2 }}] #tdk:varying, need to customize the label
+multi_boxplot_dataset_label: ["AirNow", {{ iface.mm_model_titles_j2 }}]
 multi_boxplot_data_proc:
   rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.
   set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.
