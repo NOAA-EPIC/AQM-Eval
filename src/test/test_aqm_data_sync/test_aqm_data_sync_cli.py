@@ -31,3 +31,18 @@ def test_time_varying_use_case(tmp_path: Path) -> None:
     result = runner.invoke(app, args, catch_exceptions=False)
     print(result.output)
     assert result.exit_code == 0
+
+
+def test_observations(tmp_path: Path) -> None:
+    """Test downloading observations with a dry run."""
+    runner = CliRunner()
+
+    args = [
+        "observations",
+        "--dst-dir",
+        str(tmp_path),
+        "--dry-run",
+    ]
+    result = runner.invoke(app, args, catch_exceptions=False)
+    print(result.output)
+    assert result.exit_code == 0

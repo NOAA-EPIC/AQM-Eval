@@ -83,6 +83,11 @@ class SRWFixedContext(AbstractContext):
     s3_root: str = "s3://noaa-ufs-srw-pds/develop-20250702"
 
 
+class ObservationsContext(AbstractContext):
+    """Context for observations data synchronization."""
+    s3_root: str = "s3://noaa-ufs-srw-pds/UFS-AQM"
+
+
 class TimeVaryingContext(AbstractContext):
     """Context for time-varying data synchronization.
 
@@ -280,6 +285,11 @@ class SRWFixedSyncRunner(AbstractS3SyncRunner[SRWFixedContext]):
     def _update_include_templates_(self, cmd: list[str]) -> None:
         cmd += ["--include", "fix/*", "--include", "NaturalEarth/*"]
 
+class ObservationsSyncRunner(AbstractS3SyncRunner[ObservationsContext]):
+    """Synchronization runner for observations data."""
+
+    def _update_include_templates_(self, cmd: list[str]) -> None:
+        cmd += ["--include", "Observations/*"]
 
 class TimeVaryingSyncRunner(AbstractS3SyncRunner[TimeVaryingContext]):
     """Synchronization runner for time-varying data."""
