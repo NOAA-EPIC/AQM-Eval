@@ -63,7 +63,7 @@ class SRWInterface(BaseModel):
     @property
     def mm_output_dir(self) -> PathExisting:
         config_path = self.find_nested_key(
-            ("task_melodies_monet_prep", "MM_OUTPUT_DIR")
+            ("task_mm_prep", "MM_OUTPUT_DIR")
         )
         if config_path is None:
             config_path = self.expt_dir / "mm_output"
@@ -85,7 +85,7 @@ class SRWInterface(BaseModel):
             [
                 PackageKey(ii)
                 for ii in self.find_nested_key(
-                    ("task_melodies_monet_prep", "MM_EVAL_PACKAGES")
+                    ("task_mm_prep", "MM_EVAL_PACKAGES")
                 )
             ]
         )
@@ -94,7 +94,7 @@ class SRWInterface(BaseModel):
     @property
     def mm_obs_airnow_fn_template(self) -> str:
         return self.find_nested_key(
-            ("task_melodies_monet_prep", "MM_OBS_AIRNOW_FN_TEMPLATE")
+            ("task_mm_prep", "MM_OBS_AIRNOW_FN_TEMPLATE")
         )
 
     @computed_field
@@ -124,7 +124,7 @@ class SRWInterface(BaseModel):
     @computed_field
     @property
     def mm_base_model_expt_dir(self) -> PathExisting | None:
-        return self.find_nested_key(("task_melodies_monet_prep", "MM_BASE_MODEL_EXPT_DIR"))
+        return self.find_nested_key(("task_mm_prep", "MM_BASE_MODEL_EXPT_DIR"))
 
     @computed_field
     @property

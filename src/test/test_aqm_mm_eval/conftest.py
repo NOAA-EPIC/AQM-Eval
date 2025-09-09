@@ -34,7 +34,7 @@ def config_path_user(expt_dir: Path, use_base_model: bool) -> Path:
             "DATE_FIRST_CYCL": "2023060112",
             "DATE_LAST_CYCL": "2023060212",
         },
-        "task_melodies_monet_prep": {
+        "task_mm_prep": {
             "MM_OUTPUT_DIR": None,
             "MM_EVAL_PACKAGES": ["chem"],
             "MM_OBS_AIRNOW_FN_TEMPLATE": "AirNow_20230601_20230701.nc",
