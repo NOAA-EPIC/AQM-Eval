@@ -34,10 +34,10 @@ class SRWInterface(BaseModel):
     def config_path_rocoto(self) -> PathExisting:
         return self.expt_dir / "rocoto_defns.yaml"
 
-    @computed_field
-    @property
-    def config_path_var_defns(self) -> PathExisting:
-        return self.expt_dir / "var_defns.yaml"
+    # @computed_field
+    # @property
+    # def config_path_var_defns(self) -> PathExisting:
+    #     return self.expt_dir / "var_defns.yaml"
 
     @computed_field
     @property
@@ -130,7 +130,9 @@ class SRWInterface(BaseModel):
     @property
     def cartopy_data_dir(self) -> PathExisting:
         #tdk: support with s3 stage directory
-        return PathExisting(self.find_nested_key(("platform", "FIXshp"))).absolute().resolve(strict=True)
+        #tdk: create configuration parameter
+        # return PathExisting(self.find_nested_key(("platform", "FIXshp"))).absolute().resolve(strict=True)
+        return Path("/gpfs/f6/bil-fire8/world-shared/UFS_SRW_data/develop/NaturalEarth")
 
     @cached_property
     def mm_packages(self) -> tuple[ChemEvalPackage, ...]:
@@ -164,7 +166,8 @@ class SRWInterface(BaseModel):
 
     @cached_property
     def yaml_srw_config_paths(self) -> tuple[PathExisting, ...]:
-        return self.config_path_user, self.config_path_rocoto, self.config_path_var_defns
+        # return self.config_path_user, self.config_path_rocoto, self.config_path_var_defns
+        return self.config_path_user, self.config_path_rocoto
 
     @cached_property
     def mm_models(self) -> tuple[Model, ...]:
