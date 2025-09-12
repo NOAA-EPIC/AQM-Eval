@@ -16,6 +16,8 @@ from aqm_eval.aqm_data_sync.core import (
     TimeVaryingSyncRunner,
     UseCase,
     UseCaseKey,
+    ObservationsContext,
+    ObservationsSyncRunner,
 )
 
 os.environ["NO_COLOR"] = "1"
@@ -108,6 +110,25 @@ def srw_fixed(
     runner = SRWFixedSyncRunner(ctx)
     runner.run()
 
+@app.command(name="observations", help="Download observations.")
+def observations(
+    dst_dir: Path = typer.Option(..., _FLAG_NAME.dst_dir, help=_HELP.dst_dir),
+    max_concurrent_requests: int = typer.Option(
+        _DEFAULT.max_concurrent_requests,
+        _FLAG_NAME.max_concurrent_requests,
+        help=_HELP.max_concurrent_requests,
+    ),
+    dry_run: bool = typer.Option(False, _FLAG_NAME.dry_run, help=_HELP.dry_run),
+) -> None:
+    """Download observations. See help messages for parameter documentation."""
+    kwds = dict(
+        dst_dir=dst_dir,
+        max_concurrent_requests=max_concurrent_requests,
+        dry_run=dry_run,
+    )
+    ctx = ObservationsContext.model_validate(kwds)
+    runner = ObservationsSyncRunner(ctx)
+    runner.run()
 
 if __name__ == "__main__":
     app()

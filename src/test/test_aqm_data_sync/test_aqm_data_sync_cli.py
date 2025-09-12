@@ -12,6 +12,7 @@ def test_help() -> None:
     for subcommand in ("time-varying", "srw-fixed"):
         result = runner.invoke(app, [subcommand, "--help"], catch_exceptions=False)
         print(result.output)
+        assert result.exit_code == 0
 
 
 def test_time_varying_use_case(tmp_path: Path) -> None:
@@ -26,6 +27,21 @@ def test_time_varying_use_case(tmp_path: Path) -> None:
         str(tmp_path),
         "--dry-run",
         "--snippet",
+    ]
+    result = runner.invoke(app, args, catch_exceptions=False)
+    print(result.output)
+    assert result.exit_code == 0
+
+
+def test_observations(tmp_path: Path) -> None:
+    """Test downloading observations with a dry run."""
+    runner = CliRunner()
+
+    args = [
+        "observations",
+        "--dst-dir",
+        str(tmp_path),
+        "--dry-run",
     ]
     result = runner.invoke(app, args, catch_exceptions=False)
     print(result.output)
