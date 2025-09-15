@@ -4,7 +4,7 @@ from pytest_mock import MockerFixture
 from typer.testing import CliRunner
 
 from aqm_eval.aqm_mm_eval.aqm_mm_eval_cli import app
-from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface
+from aqm_eval.aqm_mm_eval.driver.interface.srw import SRWInterface
 from aqm_eval.aqm_mm_eval.driver.package import PackageKey, TaskKey
 from aqm_eval.aqm_mm_eval.driver.runner import MMEvalRunner
 
@@ -26,7 +26,7 @@ def test_srw_run_package_and_task_selector(tmp_path: Path, srw_interface: SRWInt
         [
             "srw-run",
             "--expt-dir",
-            tmp_path,
+            str(tmp_path),
             "--task-selector",
             "save_paired",
             "--task-selector",
@@ -38,4 +38,4 @@ def test_srw_run_package_and_task_selector(tmp_path: Path, srw_interface: SRWInt
     )
     print(result.output)
     assert result.exit_code == 0
-    mock.assert_called_once_with(task_selector=[TaskKey.SAVE_PAIRED, TaskKey.TIMESERIES], package_selector=[PackageKey.CHEM])
+    mock.assert_called_once_with(task_selector=(TaskKey.SAVE_PAIRED, TaskKey.TIMESERIES), package_selector=(PackageKey.CHEM,))

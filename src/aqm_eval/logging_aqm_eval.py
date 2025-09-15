@@ -5,7 +5,7 @@ import logging
 import logging.config
 import time
 from enum import StrEnum, unique
-from typing import Any, Callable, TypeVar
+from typing import Callable, ParamSpec, TypeVar
 
 _PROJECT_NAME = "aqm-eval"
 
@@ -134,9 +134,12 @@ class LoggerWrapper:
 LOGGER = LoggerWrapper()
 LOGGER.initialize(log_level=LogLevel.DEBUG)
 
-F = TypeVar("F", bound=Callable[..., Any])
 
-def log_it(func: F) -> F:
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+def log_it(func: Callable[P, R]) -> Callable[P, R]:
     """Decorator that logs function entry, exit, and execution time.
 
     Parameters
@@ -151,7 +154,7 @@ def log_it(func: F) -> F:
     """
 
     @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         global LOGGER
         func_name = f"{func.__qualname__}"
         LOGGER(f"Entering {func_name}")

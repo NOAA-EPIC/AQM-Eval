@@ -3,7 +3,6 @@ from pathlib import Path
 
 import typer
 
-from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface
 from aqm_eval.aqm_mm_eval.driver.package import PackageKey, TaskKey
 from aqm_eval.aqm_mm_eval.driver.runner import MMEvalRunner
 
@@ -15,9 +14,9 @@ app = typer.Typer(pretty_exceptions_enable=False)
     name="srw-init",
     help="Initialize the MELODIES-MONET UFS-AQM evaluation from the SRW workflow.",
 )
-def srw_init(
-    expt_dir: Path = typer.Option(..., "--expt-dir", help="Experiment directory.")
-):
+def srw_init(expt_dir: Path = typer.Option(..., "--expt-dir", help="Experiment directory.")) -> None:
+    from aqm_eval.aqm_mm_eval.driver.interface.srw import SRWInterface
+
     iface = SRWInterface(expt_dir=expt_dir)
     runner = MMEvalRunner(iface=iface)
     runner.initialize()
@@ -29,16 +28,14 @@ def srw_init(
 )
 def srw_run(
     expt_dir: Path = typer.Option(..., "--expt-dir", help="Experiment directory."),
-    package_selector: list[PackageKey] | None = typer.Option(
-        None, "--package-selector", help="Package selector."
-    ),
-    task_selector: list[TaskKey] | None = typer.Option(
-        None, "--task-selector", help="Task selector."
-    ),
-):
+    package_selector: list[PackageKey] = typer.Option(list(PackageKey), "--package-selector", help="Package selector."),
+    task_selector: list[TaskKey] = typer.Option(list(TaskKey), "--task-selector", help="Task selector."),
+) -> None:
+    from aqm_eval.aqm_mm_eval.driver.interface.srw import SRWInterface
+
     iface = SRWInterface(expt_dir=expt_dir)
     runner = MMEvalRunner(iface=iface)
-    runner.run(task_selector=task_selector, package_selector=package_selector)
+    runner.run(task_selector=tuple(task_selector), package_selector=tuple(package_selector))
 
 
 if __name__ == "__main__":

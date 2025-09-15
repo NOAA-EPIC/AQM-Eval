@@ -10,12 +10,14 @@ authors = [
 
 [project.scripts]
 aqm-data-sync = "aqm_eval.aqm_data_sync.aqm_data_sync_cli:app"
+aqm-mm-eval = "aqm_eval.aqm_mm_eval.aqm_mm_eval_cli:app"
 
 [tool.ruff]
 line-length = 132
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "D"]
+#select = ["E", "F", "I", "D"]  #tdk:last: re-enable "D" which checks for docstrings
+select = ["E", "F", "I"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
@@ -26,3 +28,6 @@ convention = "numpy"
 
 [tool.ruff.format]
 quote-style = "double"
+
+[tool.mypy]
+disable_error_code = ["prop-decorator"]

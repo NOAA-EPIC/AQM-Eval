@@ -2,6 +2,7 @@ name: Docker Build and Test
 
 on:
   pull_request:
+#  push:
 
 jobs:
   docker-build-test:
@@ -21,7 +22,7 @@ jobs:
         push: false
         tags: aqm-eval:${{ github.sha }}
         cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-to: type=gha,mode=min
         load: true
 
     - name: Run pre-commit linting

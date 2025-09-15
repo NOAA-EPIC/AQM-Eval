@@ -10,14 +10,14 @@ import typer
 from pydantic import BaseModel
 
 from aqm_eval.aqm_data_sync.core import (
+    ObservationsContext,
+    ObservationsSyncRunner,
     SRWFixedContext,
     SRWFixedSyncRunner,
     TimeVaryingContext,
     TimeVaryingSyncRunner,
     UseCase,
     UseCaseKey,
-    ObservationsContext,
-    ObservationsSyncRunner,
 )
 
 os.environ["NO_COLOR"] = "1"
@@ -110,6 +110,7 @@ def srw_fixed(
     runner = SRWFixedSyncRunner(ctx)
     runner.run()
 
+
 @app.command(name="observations", help="Download observations.")
 def observations(
     dst_dir: Path = typer.Option(..., _FLAG_NAME.dst_dir, help=_HELP.dst_dir),
@@ -129,6 +130,7 @@ def observations(
     ctx = ObservationsContext.model_validate(kwds)
     runner = ObservationsSyncRunner(ctx)
     runner.run()
+
 
 if __name__ == "__main__":
     app()

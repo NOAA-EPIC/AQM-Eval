@@ -14,7 +14,7 @@ def create_symlinks(
     dst_prefix: str,
     src_dir_template: tuple[str, ...],
     src_fn_template: tuple[str, ...],
-):
+) -> None:
     """
     Create symlinks in dst_dir for files in src_dir that match templates.
 

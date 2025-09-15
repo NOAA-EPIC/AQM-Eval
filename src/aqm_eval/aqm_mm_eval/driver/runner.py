@@ -1,14 +1,11 @@
-import cartopy
+import cartopy  # type: ignore[import-untyped]
 import dask
 import matplotlib
-from melodies_monet import driver
-from melodies_monet.driver import analysis
+from melodies_monet import driver  # type: ignore[import-untyped]
+from melodies_monet.driver import analysis  # type: ignore[import-untyped]
 from pydantic import BaseModel
 
-from aqm_eval.aqm_mm_eval.driver.helpers import create_symlinks
-from aqm_eval.aqm_mm_eval.driver.interface import (
-    SRWInterface,
-)
+from aqm_eval.aqm_mm_eval.driver.interface.base import AbstractInterface
 from aqm_eval.aqm_mm_eval.driver.package import PackageKey, TaskKey
 from aqm_eval.logging_aqm_eval import LOGGER, log_it
 
@@ -16,7 +13,7 @@ from aqm_eval.logging_aqm_eval import LOGGER, log_it
 class MMEvalRunner(BaseModel):
     model_config = {"frozen": True}
 
-    iface: SRWInterface
+    iface: AbstractInterface
 
     @log_it
     def initialize(self) -> None:
@@ -31,8 +28,8 @@ class MMEvalRunner(BaseModel):
     @log_it
     def run(
         self,
-        package_selector: tuple[PackageKey, ...] | list[PackageKey] = tuple(PackageKey),
-        task_selector: tuple[TaskKey, ...] | list[TaskKey] = tuple(TaskKey),
+        package_selector: tuple[PackageKey, ...] = tuple(PackageKey),
+        task_selector: tuple[TaskKey, ...] = tuple(TaskKey),
         finalize: bool = False,
     ) -> None:
         LOGGER(f"{package_selector=}")
@@ -41,7 +38,7 @@ class MMEvalRunner(BaseModel):
         try:
             matplotlib.use("Agg")
             cartopy.config["data_dir"] = self.iface.cartopy_data_dir
-            dask.config.set(**{"array.slicing.split_large_chunks": True})
+            dask.config.set({"array.slicing.split_large_chunks": True})
             for package in self.iface.mm_packages:
                 if package.key not in package_selector:
                     continue

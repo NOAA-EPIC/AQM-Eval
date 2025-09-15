@@ -4,14 +4,18 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any
 
-import yaml
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
-from pydantic import BaseModel, computed_field
+from pydantic import computed_field
 
 from aqm_eval.aqm_mm_eval.driver.helpers import PathExisting
+from aqm_eval.aqm_mm_eval.driver.interface.base import AbstractInterface
 from aqm_eval.aqm_mm_eval.driver.model import Model, ModelRole
-from aqm_eval.aqm_mm_eval.driver.package import PackageKey, ChemEvalPackage, TaskKey
+from aqm_eval.aqm_mm_eval.driver.package import ChemEvalPackage, PackageKey
 from aqm_eval.logging_aqm_eval import LOGGER
+
+try:
+    from uwtools.api.config import YAMLConfig, get_yaml_config
+except ImportError as exc:
+    LOGGER("uwtools required for SRW interface", exc_info=exc)
 
 
 def _convert_date_string_to_mm_(date_str: str) -> str:
@@ -19,9 +23,7 @@ def _convert_date_string_to_mm_(date_str: str) -> str:
     return dt.strftime("%Y-%m-%d-%H:00:00")
 
 
-class SRWInterface(BaseModel):
-    model_config = {"frozen": True}
-
+class SRWInterface(AbstractInterface):
     expt_dir: PathExisting
 
     @computed_field
@@ -34,10 +36,10 @@ class SRWInterface(BaseModel):
     def config_path_rocoto(self) -> PathExisting:
         return self.expt_dir / "rocoto_defns.yaml"
 
-    # @computed_field
-    # @property
-    # def config_path_var_defns(self) -> PathExisting:
-    #     return self.expt_dir / "var_defns.yaml"
+    @computed_field
+    @property
+    def config_path_var_defns(self) -> PathExisting:
+        return self.expt_dir / "var_defns.yaml"
 
     @computed_field
     @property
@@ -62,9 +64,7 @@ class SRWInterface(BaseModel):
     @computed_field
     @property
     def mm_output_dir(self) -> PathExisting:
-        config_path = self.find_nested_key(
-            ("task_mm_prep", "MM_OUTPUT_DIR")
-        )
+        config_path = self.find_nested_key(("task_mm_prep", "MM_OUTPUT_DIR"))
         if config_path is None:
             config_path = self.expt_dir / "mm_output"
         if not config_path.exists():
@@ -81,33 +81,17 @@ class SRWInterface(BaseModel):
     @computed_field
     @property
     def mm_package_keys(self) -> tuple[PackageKey, ...]:
-        return tuple(
-            [
-                PackageKey(ii)
-                for ii in self.find_nested_key(
-                    ("task_mm_prep", "MM_EVAL_PACKAGES")
-                )
-            ]
-        )
+        return tuple([PackageKey(ii) for ii in self.find_nested_key(("task_mm_prep", "MM_EVAL_PACKAGES"))])
 
     @computed_field
     @property
     def mm_obs_airnow_fn_template(self) -> str:
-        return self.find_nested_key(
-            ("task_mm_prep", "MM_OBS_AIRNOW_FN_TEMPLATE")
-        )
+        return self.find_nested_key(("task_mm_prep", "MM_OBS_AIRNOW_FN_TEMPLATE"))
 
     @computed_field
     @property
     def link_simulation(self) -> tuple[str, ...]:
-        return tuple(
-            set(
-                [
-                    f"{str(ii.year)}*"
-                    for ii in [self.datetime_first_cycl, self.datetime_last_cycl]
-                ]
-            )
-        )
+        return tuple(set([f"{str(ii.year)}*" for ii in [self.datetime_first_cycl, self.datetime_last_cycl]]))
 
     @computed_field
     @property
@@ -118,21 +102,13 @@ class SRWInterface(BaseModel):
 
     @computed_field
     @property
-    def template_dir(self) -> PathExisting:
-        return (Path(__file__).parent.parent / "yaml_template").absolute().resolve()
-
-    @computed_field
-    @property
     def mm_base_model_expt_dir(self) -> PathExisting | None:
         return self.find_nested_key(("task_mm_prep", "MM_BASE_MODEL_EXPT_DIR"))
 
     @computed_field
     @property
     def cartopy_data_dir(self) -> PathExisting:
-        #tdk: support with s3 stage directory
-        #tdk: create configuration parameter
-        # return PathExisting(self.find_nested_key(("platform", "FIXshp"))).absolute().resolve(strict=True)
-        return Path("/gpfs/f6/bil-fire8/world-shared/UFS_SRW_data/develop/NaturalEarth")
+        return PathExisting(self.find_nested_key(("platform", "FIXshp"))).absolute().resolve(strict=True)
 
     @cached_property
     def mm_packages(self) -> tuple[ChemEvalPackage, ...]:
@@ -156,18 +132,18 @@ class SRWInterface(BaseModel):
         return datetime.strptime(self.date_last_cycle_srw, "%Y%m%d%H")
 
     @cached_property
-    def yaml_data(self) -> dict[Path, dict[str, Any]]:
+    def yaml_data(self) -> dict[Path, YAMLConfig]:
         """Cache loaded YAML data from config files."""
         data = {}
         for yaml_path in self.yaml_srw_config_paths:
-            with open(yaml_path, "r") as f:
-                data[yaml_path] = yaml.safe_load(f)
+            # with open(yaml_path, "r") as f:
+            data[yaml_path] = get_yaml_config(yaml_path)
         return data
 
     @cached_property
     def yaml_srw_config_paths(self) -> tuple[PathExisting, ...]:
-        # return self.config_path_user, self.config_path_rocoto, self.config_path_var_defns
-        return self.config_path_user, self.config_path_rocoto
+        return self.config_path_user, self.config_path_rocoto, self.config_path_var_defns
+        # return self.config_path_user, self.config_path_rocoto
 
     @cached_property
     def mm_models(self) -> tuple[Model, ...]:
@@ -180,10 +156,12 @@ class SRWInterface(BaseModel):
                 role=ModelRole.EVAL,
                 dyn_file_template=("dynf*.nc",),
                 cycle_dir_template=self.link_simulation,
-                link_alldays_path=self.link_alldays_path)
-            ]
+                link_alldays_path=self.link_alldays_path,
+            )
+        ]
         if self.mm_base_model_expt_dir is not None:
-            ret.append(Model(
+            ret.append(
+                Model(
                     expt_dir=self.expt_dir,
                     label="base_aqm",
                     title="Base AQM",
@@ -192,7 +170,8 @@ class SRWInterface(BaseModel):
                     dyn_file_template=("dynf*.nc",),
                     cycle_dir_template=self.link_simulation,
                     link_alldays_path=self.link_alldays_path,
-                ))
+                )
+            )
         return tuple(ret)
 
     @cached_property
@@ -202,58 +181,6 @@ class SRWInterface(BaseModel):
     @cached_property
     def mm_model_titles_j2(self) -> str:
         return ", ".join([f'"{ii.title}"' for ii in self.mm_models])
-
-    def create_control_configs(self) -> None:
-        for package in self.mm_packages:
-            iface = self
-            searchpath = iface.template_dir
-            LOGGER(f"creating MM evaluation templates. {searchpath=}")
-            package_run_dir = package.run_dir
-            LOGGER(f"{package_run_dir=}")
-            if not package_run_dir.exists():
-                LOGGER(f"{package_run_dir=} does not exist. creating.")
-                package_run_dir.mkdir(exist_ok=True, parents=True)
-            env = Environment(
-                loader=FileSystemLoader(searchpath=searchpath),
-                undefined=StrictUndefined,
-            )
-
-            cfg = {"iface": self, "mm_tasks": [ii.value for ii in package.tasks]}
-
-            namelist_config_str = env.get_template(package.namelist_template).render(
-                cfg
-            )
-            namelist_config = yaml.safe_load(namelist_config_str)
-            with open(package_run_dir / "namelist.yaml", "w") as f:
-                f.write(namelist_config_str)
-
-            # tdk:rm
-            try:
-                with open(r"C:\Users\bkozi\Dropbox\dtmp\namelist.yaml", "w") as f:
-                    f.write(namelist_config_str)
-            except:
-                pass
-
-            for task in cfg["mm_tasks"]:
-
-                match task:
-                    case TaskKey.SCORECARD_RMSE:
-                        namelist_config["scorecard_eval_method"] = '"RMSE"'
-                    case TaskKey.SCORECARD_IOA:
-                        namelist_config["scorecard_eval_method"] = '"IOA"'
-                    case TaskKey.SCORECARD_NMB:
-                        namelist_config["scorecard_eval_method"] = '"NMB"'
-                    case TaskKey.SCORECARD_NME:
-                        namelist_config["scorecard_eval_method"] = '"NME"'
-
-                LOGGER(f"{task=}")
-                template = env.get_template(f"template_{task}.j2")
-                LOGGER(f"{template=}")
-                config_yaml = template.render(**namelist_config)
-                curr_control_path = package_run_dir / f"control_{task}.yaml"
-                LOGGER(f"{curr_control_path=}")
-                with open(curr_control_path, "w") as f:
-                    f.write(config_yaml)
 
     def find_nested_key(self, key_tuple: tuple[str, ...]) -> Any:
         """Find a nested key in the YAML dictionaries using a tuple of string keys.
@@ -279,6 +206,4 @@ class SRWInterface(BaseModel):
                     level=logging.ERROR,
                 )
                 raise
-        raise KeyError(
-            f"{key_tuple=} not found in any YAML files: {self.yaml_data.keys()}"
-        )
+        raise KeyError(f"{key_tuple=} not found in any YAML files: {self.yaml_data.keys()}")

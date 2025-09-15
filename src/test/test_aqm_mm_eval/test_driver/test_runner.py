@@ -1,7 +1,7 @@
 import pytest
 from pydantic import BaseModel
 
-from aqm_eval.aqm_mm_eval.driver.interface import SRWInterface
+from aqm_eval.aqm_mm_eval.driver.interface.srw import SRWInterface
 from aqm_eval.aqm_mm_eval.driver.package import PackageKey
 from aqm_eval.aqm_mm_eval.driver.runner import MMEvalRunner
 
@@ -14,9 +14,7 @@ class MMEvalRunnerTestData(BaseModel):
 
 
 @pytest.fixture
-def mm_eval_runner_test_data(
-    srw_interface: SRWInterface, use_base_model: bool
-) -> MMEvalRunnerTestData:
+def mm_eval_runner_test_data(srw_interface: SRWInterface, use_base_model: bool) -> MMEvalRunnerTestData:
     if use_base_model:
         expected_n_links = 100
         expected_fns = {
@@ -72,13 +70,8 @@ class TestMMEvalRunner:
         # Test control yaml files are created
         chem_run_dir = iface.mm_run_dir / PackageKey.CHEM.value
         actual_files = chem_run_dir.rglob("*")
-        assert (
-            set([ii.name for ii in actual_files])
-            == mm_eval_runner_test_data.expected_fns
-        )
+        assert set([ii.name for ii in actual_files]) == mm_eval_runner_test_data.expected_fns
 
         with pytest.raises(ValueError) as excinfo:
             runner.run()
-        assert str(excinfo.value).startswith(
-            "did not find a match in any of xarray's currently installed IO backends"
-        )
+        assert str(excinfo.value).startswith("did not find a match in any of xarray's currently installed IO backends")
