@@ -1,22 +1,32 @@
+"""Defines the MM evaluation runner to initialize, run, and finalize a configuration."""
+
 import cartopy  # type: ignore[import-untyped]
 import dask
 import matplotlib
 from melodies_monet import driver  # type: ignore[import-untyped]
 from melodies_monet.driver import analysis  # type: ignore[import-untyped]
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from aqm_eval.logging_aqm_eval import LOGGER, log_it
-from aqm_eval.mm_eval.driver.context.base import AbstractContext
+from aqm_eval.mm_eval.driver.context.base import AbstractDriverContext
 from aqm_eval.mm_eval.driver.package import PackageKey, TaskKey
 
 
 class MMEvalRunner(BaseModel):
+    """Initialize, run, and finalize an MM evaluation."""
+
     model_config = {"frozen": True}
 
-    ctx: AbstractContext
+    ctx: AbstractDriverContext = Field(description="Driver context.")
 
     @log_it
     def initialize(self) -> None:
+        """Initialize the runner. Create symlinks and control files for example.
+
+        Returns
+        -------
+        None
+        """
         LOGGER(f"{self.ctx=}")
 
         for model in self.ctx.mm_models:
@@ -32,6 +42,21 @@ class MMEvalRunner(BaseModel):
         task_selector: tuple[TaskKey, ...] = tuple(TaskKey),
         finalize: bool = False,
     ) -> None:
+        """Run the MM evaluation.
+
+        Parameters
+        ----------
+        package_selector: tuple[PackageKey, ...] = tuple(PackageKey), optional
+            Optionally select packages to run. Used to limit packages that may already be configured.
+        task_selector: tuple[TaskKey, ...] = tuple(TaskKey), optional
+            Optionally select tasks to run. Used to limit tasks that may already be configured.
+        finalize: bool = False, optional
+            If True, finalize the runner after the run completes, successfully or not.
+
+        Returns
+        -------
+        None
+        """
         LOGGER(f"{package_selector=}")
         LOGGER(f"{task_selector=}")
         LOGGER(f"{finalize=}")
@@ -79,4 +104,11 @@ class MMEvalRunner(BaseModel):
                 an.plotting()
 
     @log_it
-    def finalize(self) -> None: ...
+    def finalize(self) -> None:
+        """Finalize the runner.
+
+        Returns
+        -------
+        None
+        """
+        ...

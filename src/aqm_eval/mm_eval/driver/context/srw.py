@@ -1,3 +1,5 @@
+"""Implements the Short-Range Weather (SRW) App driver context."""
+
 import logging
 from datetime import datetime
 from functools import cached_property
@@ -5,10 +7,10 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import computed_field
+from pydantic import Field, computed_field
 
 from aqm_eval.logging_aqm_eval import LOGGER
-from aqm_eval.mm_eval.driver.context.base import AbstractContext
+from aqm_eval.mm_eval.driver.context.base import AbstractDriverContext
 from aqm_eval.mm_eval.driver.helpers import PathExisting
 from aqm_eval.mm_eval.driver.model import Model, ModelRole
 from aqm_eval.mm_eval.driver.package import ChemEvalPackage, PackageKey, TaskKey
@@ -24,46 +26,46 @@ def _convert_date_string_to_mm_(date_str: str) -> str:
     return dt.strftime("%Y-%m-%d-%H:00:00")
 
 
-class SRWContext(AbstractContext):
-    expt_dir: PathExisting
+class SRWContext(AbstractDriverContext):
+    expt_dir: PathExisting = Field(description="Experiment directory.")
 
     @computed_field
-    @property
+    @cached_property
     def config_path_user(self) -> PathExisting:
         return self.expt_dir / "config.yaml"
 
     @computed_field
-    @property
+    @cached_property
     def config_path_rocoto(self) -> PathExisting:
         return self.expt_dir / "rocoto_defns.yaml"
 
     @computed_field
-    @property
+    @cached_property
     def config_path_var_defns(self) -> PathExisting:
         return self.expt_dir / "var_defns.yaml"
 
     @computed_field
-    @property
+    @cached_property
     def date_first_cycle_srw(self) -> str:
         return self.find_nested_key(("workflow", "DATE_FIRST_CYCL"))
 
     @computed_field
-    @property
+    @cached_property
     def date_last_cycle_srw(self) -> str:
         return self.find_nested_key(("workflow", "DATE_LAST_CYCL"))
 
     @computed_field
-    @property
+    @cached_property
     def date_first_cycle_mm(self) -> str:
         return _convert_date_string_to_mm_(self.date_first_cycle_srw)
 
     @computed_field
-    @property
+    @cached_property
     def date_last_cycle_mm(self) -> str:
         return _convert_date_string_to_mm_(self.date_last_cycle_srw)
 
     @computed_field
-    @property
+    @cached_property
     def mm_output_dir(self) -> PathExisting:
         config_path = self.find_nested_key(("task_mm_prep", "MM_OUTPUT_DIR"))
         if config_path is None:
@@ -73,41 +75,41 @@ class SRWContext(AbstractContext):
         return config_path
 
     @computed_field
-    @property
+    @cached_property
     def mm_run_dir(self) -> PathExisting:
         ret = self.expt_dir / "mm_run"
         ret.mkdir(exist_ok=True, parents=True)
         return ret
 
     @computed_field
-    @property
+    @cached_property
     def mm_package_keys(self) -> tuple[PackageKey, ...]:
         return tuple([PackageKey(ii) for ii in self.find_nested_key(("task_mm_prep", "MM_EVAL_PACKAGES"))])
 
     @computed_field
-    @property
+    @cached_property
     def mm_obs_airnow_fn_template(self) -> str:
         return self.find_nested_key(("task_mm_prep", "MM_OBS_AIRNOW_FN_TEMPLATE"))
 
     @computed_field
-    @property
+    @cached_property
     def link_simulation(self) -> tuple[str, ...]:
         return tuple(set([f"{str(ii.year)}*" for ii in [self.datetime_first_cycl, self.datetime_last_cycl]]))
 
     @computed_field
-    @property
+    @cached_property
     def link_alldays_path(self) -> PathExisting:
         ret = self.mm_run_dir / "Alldays"
         ret.mkdir(exist_ok=True, parents=True)
         return ret
 
     @computed_field
-    @property
+    @cached_property
     def mm_base_model_expt_dir(self) -> PathExisting | None:
         return self.find_nested_key(("task_mm_prep", "MM_BASE_MODEL_EXPT_DIR"))
 
     @computed_field
-    @property
+    @cached_property
     def cartopy_data_dir(self) -> PathExisting:
         return PathExisting(self.find_nested_key(("platform", "FIXshp"))).absolute().resolve(strict=True)
 

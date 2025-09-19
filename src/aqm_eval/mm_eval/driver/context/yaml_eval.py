@@ -1,12 +1,14 @@
+"""Implements the pure YAML driver context for MM evaluation packages."""
+
 from functools import cached_property
 from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import computed_field
+from pydantic import Field, computed_field
 
 from aqm_eval.logging_aqm_eval import LOGGER
-from aqm_eval.mm_eval.driver.context.base import AbstractContext
+from aqm_eval.mm_eval.driver.context.base import AbstractDriverContext
 from aqm_eval.mm_eval.driver.helpers import PathExisting
 from aqm_eval.mm_eval.driver.model import Model, ModelRole
 from aqm_eval.mm_eval.driver.package import ChemEvalPackage, TaskKey
@@ -19,19 +21,18 @@ def _get_or_create_path_(path: str | Path) -> PathExisting:
     return PathExisting(path)
 
 
-class YAMLContext(AbstractContext):
+class YAMLContext(AbstractDriverContext):
     model_config = {"frozen": True}
 
-    yaml_config: PathExisting
+    yaml_config: PathExisting = Field(description="Path to the YAML configuration file for the MM package.")
 
     @computed_field
-    @property
+    @cached_property
     def date_first_cycle_mm(self) -> str:
         return self._config_data["start_time"]
 
-    # @abstractmethod
     @computed_field
-    @property
+    @cached_property
     def date_last_cycle_mm(self) -> str:
         return self._config_data["end_time"]
 
@@ -50,7 +51,7 @@ class YAMLContext(AbstractContext):
         )
 
     @computed_field
-    @property
+    @cached_property
     def link_alldays_path(self) -> PathExisting:
         return _get_or_create_path_(self._config_data["link_Alldays_path"])
 
@@ -80,27 +81,27 @@ class YAMLContext(AbstractContext):
         return eval_model, base_model
 
     @computed_field
-    @property
+    @cached_property
     def mm_run_dir(self) -> PathExisting:
         return _get_or_create_path_(self._config_data["run_dir"])
 
     @computed_field
-    @property
+    @cached_property
     def mm_obs_airnow_fn_template(self) -> str:
         return self._config_data["obs_file"]
 
     @computed_field
-    @property
+    @cached_property
     def mm_output_dir(self) -> PathExisting:
         return _get_or_create_path_(self._config_data["output_dir"])
 
     @computed_field
-    @property
+    @cached_property
     def template_dir(self) -> PathExisting:
         return (Path(__file__).parent.parent.parent / "yaml_template").absolute().resolve()
 
     @computed_field
-    @property
+    @cached_property
     def conda_bin(self) -> Path:
         return Path(self._config_data["conda_bin"])
 

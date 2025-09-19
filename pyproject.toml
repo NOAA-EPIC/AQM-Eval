@@ -16,7 +16,7 @@ aqm-mm-eval = "aqm_eval.mm_eval.mm_eval_cli:app"
 line-length = 132
 
 [tool.ruff.lint]
-#select = ["E", "F", "I", "D"]  #tdk:last: re-enable "D" which checks for docstrings
+#select = ["E", "F", "I", "D"] TODO: Turn on doc checks when doc strategy determined
 select = ["E", "F", "I"]
 
 [tool.ruff.lint.pydocstyle]
@@ -25,6 +25,7 @@ convention = "numpy"
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["D104"]
 "test_*.py" = ["D"]
+"conftest.py" = ["D"]
 
 [tool.ruff.format]
 quote-style = "double"

@@ -1,3 +1,5 @@
+"""The CLI definition for the MELODIES MONET UFS-AQM evaluation suite."""
+
 import os
 from pathlib import Path
 
@@ -23,7 +25,7 @@ def yaml_init(yaml_config: Path = typer.Option(..., "--yaml-config", help="The e
 
 @app.command(
     name="yaml-run",
-    help="Initialize the MELODIES MONET UFS-AQM evaluation from a pure YAML file.",
+    help="Run the MELODIES MONET UFS-AQM evaluation using a pure YAML file.",
 )
 def yaml_run(yaml_config: Path = typer.Option(..., "--yaml-config", help="The evaluation's YAML configuration.")) -> None:
     ctx = YAMLContext(yaml_config=yaml_config)
