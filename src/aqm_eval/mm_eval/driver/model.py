@@ -2,8 +2,8 @@ from enum import StrEnum, unique
 
 from pydantic import BaseModel, computed_field
 
-from aqm_eval.aqm_mm_eval.driver.helpers import PathExisting, create_symlinks
 from aqm_eval.logging_aqm_eval import log_it
+from aqm_eval.mm_eval.driver.helpers import PathExisting, create_symlinks
 
 
 @unique

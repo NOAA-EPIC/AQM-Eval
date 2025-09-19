@@ -2,14 +2,14 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from aqm_eval.aqm_data_sync.aqm_data_sync_cli import app
-from aqm_eval.aqm_data_sync.core import UseCaseKey
+from aqm_eval.data_sync.core import UseCaseKey
+from aqm_eval.data_sync.data_sync_cli import app
 
 
 def test_help() -> None:
     """Test that the help message can be displayed."""
     runner = CliRunner()
-    for subcommand in ("time-varying", "srw-fixed"):
+    for subcommand in ("time-varying", "srw-fixed", "observations"):
         result = runner.invoke(app, [subcommand, "--help"], catch_exceptions=False)
         print(result.output)
         assert result.exit_code == 0

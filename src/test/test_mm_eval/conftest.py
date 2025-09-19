@@ -2,8 +2,9 @@ from pathlib import Path
 
 import pytest
 import yaml
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from aqm_eval.aqm_mm_eval.driver.interface.srw import SRWInterface
+from aqm_eval.mm_eval.driver.context.srw import SRWContext
 
 
 @pytest.fixture(params=[True, False], ids=lambda x: f"use_base_model={x}")
@@ -76,11 +77,26 @@ def dummy_dyn_files(expt_dir: Path) -> None:
 
 
 @pytest.fixture
-def srw_interface(
+def srw_context(
     expt_dir: Path,
     config_path_user: Path,
     config_path_rocoto: Path,
     config_path_var_defns: Path,
     dummy_dyn_files: None,
-) -> SRWInterface:
-    return SRWInterface(expt_dir=expt_dir)
+) -> SRWContext:
+    return SRWContext(expt_dir=expt_dir)
+
+
+@pytest.fixture
+def namelist_chem_yaml_config(bin_dir: Path, tmp_path: Path) -> Path:
+    env = Environment(
+        loader=FileSystemLoader(searchpath=bin_dir),
+        undefined=StrictUndefined,
+    )
+    namelist_yaml_config = env.get_template("namelist.chem.yaml.j2").render({"root_path": str(tmp_path)})
+    yaml_config = tmp_path / "namelist.chem.yaml"
+    with open(yaml_config, "w") as f:
+        f.write(namelist_yaml_config)
+    (tmp_path / "base_model").mkdir(exist_ok=True, parents=True)
+    (tmp_path / "eval_model").mkdir(exist_ok=True, parents=True)
+    return yaml_config

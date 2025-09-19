@@ -1,7 +1,7 @@
 name: aqm-eval
 channels:
   - conda-forge
-  - ufs-community # Needed for SRW interface
+  - ufs-community # Needed for SRW context
   - nodefaults
 dependencies:
   - awscli=2.28.*
@@ -15,4 +15,4 @@ dependencies:
   - typer=0.16.*
   - dask=2024.2.1
   - melodies-monet=1.*
-  - uwtools # Needed for SRW interface
+  - uwtools # Needed for SRW context

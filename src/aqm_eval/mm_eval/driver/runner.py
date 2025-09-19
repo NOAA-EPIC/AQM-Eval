@@ -5,25 +5,25 @@ from melodies_monet import driver  # type: ignore[import-untyped]
 from melodies_monet.driver import analysis  # type: ignore[import-untyped]
 from pydantic import BaseModel
 
-from aqm_eval.aqm_mm_eval.driver.interface.base import AbstractInterface
-from aqm_eval.aqm_mm_eval.driver.package import PackageKey, TaskKey
 from aqm_eval.logging_aqm_eval import LOGGER, log_it
+from aqm_eval.mm_eval.driver.context.base import AbstractContext
+from aqm_eval.mm_eval.driver.package import PackageKey, TaskKey
 
 
 class MMEvalRunner(BaseModel):
     model_config = {"frozen": True}
 
-    iface: AbstractInterface
+    ctx: AbstractContext
 
     @log_it
     def initialize(self) -> None:
-        LOGGER(f"{self.iface=}")
+        LOGGER(f"{self.ctx=}")
 
-        for model in self.iface.mm_models:
+        for model in self.ctx.mm_models:
             model.create_symlinks()
 
         LOGGER("creating MM control configs")
-        self.iface.create_control_configs()
+        self.ctx.create_control_configs()
 
     @log_it
     def run(
@@ -37,9 +37,9 @@ class MMEvalRunner(BaseModel):
         LOGGER(f"{finalize=}")
         try:
             matplotlib.use("Agg")
-            cartopy.config["data_dir"] = self.iface.cartopy_data_dir
+            cartopy.config["data_dir"] = self.ctx.cartopy_data_dir
             dask.config.set({"array.slicing.split_large_chunks": True})
-            for package in self.iface.mm_packages:
+            for package in self.ctx.mm_packages:
                 if package.key not in package_selector:
                     continue
                 LOGGER(f"{package.key=}")
@@ -48,7 +48,7 @@ class MMEvalRunner(BaseModel):
                         continue
                     LOGGER(f"{task=}")
                     an = driver.analysis()
-                    control_yaml = self.iface.mm_run_dir / package.key.value / f"control_{task.value}.yaml"
+                    control_yaml = self.ctx.mm_run_dir / package.key.value / f"control_{task.value}.yaml"
                     LOGGER(f"{control_yaml=}")
                     an.control = control_yaml
                     an.read_control()

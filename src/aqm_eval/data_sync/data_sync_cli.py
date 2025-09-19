@@ -9,7 +9,7 @@ from pathlib import Path
 import typer
 from pydantic import BaseModel
 
-from aqm_eval.aqm_data_sync.core import (
+from aqm_eval.data_sync.core import (
     ObservationsContext,
     ObservationsSyncRunner,
     SRWFixedContext,
@@ -69,7 +69,7 @@ def time_varying(
     snippet: bool = typer.Option(
         False,
         "--snippet",
-        help="If provided, download data for a single forecast cycle loop (e.g. one day).",
+        help="If provided, download data for two forecast cycles (e.g. two days).",
     ),
 ) -> None:
     """Download time-varying input data for UFS-AQM. See help messages for parameter documentation."""
@@ -111,7 +111,7 @@ def srw_fixed(
     runner.run()
 
 
-@app.command(name="observations", help="Download observations.")
+@app.command(name="observations", help="Download observations for UFS-AQM evaluation.")
 def observations(
     dst_dir: Path = typer.Option(..., _FLAG_NAME.dst_dir, help=_HELP.dst_dir),
     max_concurrent_requests: int = typer.Option(

@@ -1,3 +1,4 @@
+import logging
 import platform
 from pathlib import Path
 from typing import Annotated
@@ -51,6 +52,7 @@ def create_symlinks(
 
 
 def _format_path_existing_(value: Path | str) -> Path:
+    LOGGER(f"formatting {value}", level=logging.DEBUG)
     ret = Path(value)
     if not ret.exists():
         raise ValueError(f"path does not exist: {ret}")

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, computed_field
 
-from aqm_eval.aqm_mm_eval.driver.helpers import PathExisting
+from aqm_eval.mm_eval.driver.helpers import PathExisting
 
 
 @unique
