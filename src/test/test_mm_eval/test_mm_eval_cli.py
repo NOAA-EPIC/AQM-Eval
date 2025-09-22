@@ -1,0 +1,48 @@
+from pathlib import Path
+
+from pytest_mock import MockerFixture
+from typer.testing import CliRunner
+
+from aqm_eval.mm_eval.driver.context.srw import SRWContext
+from aqm_eval.mm_eval.driver.package import PackageKey, TaskKey
+from aqm_eval.mm_eval.driver.runner import MMEvalRunner
+from aqm_eval.mm_eval.mm_eval_cli import app
+
+
+def test_help() -> None:
+    """Test that the help message can be displayed."""
+    runner = CliRunner()
+    for subcommand in ("yaml-init", "yaml-run", "srw-init", "srw-run"):
+        result = runner.invoke(app, [subcommand, "--help"], catch_exceptions=False)
+        print(result.output)
+        assert result.exit_code == 0
+
+
+def test_srw_run_package_and_task_selector(tmp_path: Path, srw_context: SRWContext, mocker: MockerFixture) -> None:
+    mock = mocker.patch.object(MMEvalRunner, "run")
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        [
+            "srw-run",
+            "--expt-dir",
+            str(tmp_path),
+            "--task-selector",
+            "save_paired",
+            "--task-selector",
+            "timeseries",
+            "--package-selector",
+            "chem",
+        ],
+        catch_exceptions=False,
+    )
+    print(result.output)
+    assert result.exit_code == 0
+    mock.assert_called_once_with(task_selector=(TaskKey.SAVE_PAIRED, TaskKey.TIMESERIES), package_selector=(PackageKey.CHEM,))
+
+
+def test_yaml_init(namelist_chem_yaml_config: Path) -> None:
+    runner = CliRunner()
+    result = runner.invoke(app, ["yaml-init", "--yaml-config", str(namelist_chem_yaml_config)])
+    print(result.output)
+    assert result.exit_code == 0
