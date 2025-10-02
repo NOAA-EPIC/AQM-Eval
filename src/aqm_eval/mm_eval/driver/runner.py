@@ -29,11 +29,17 @@ class MMEvalRunner(BaseModel):
         """
         LOGGER(f"{self.ctx=}")
 
-        for model in self.ctx.mm_models:
+        # Only create symlinks once for each model
+        for model in self.ctx.mm_packages[0].mm_models:
             model.create_symlinks()
 
         LOGGER("creating MM control configs")
         self.ctx.create_control_configs()
+
+        # tdk: this needs to use the package selector. recommend bumping package+task selector to the runner level
+        for package in self.ctx.mm_packages:
+            LOGGER(f"running package initialization for {package.key=}")
+            package.initialize()
 
     @log_it
     def run(
