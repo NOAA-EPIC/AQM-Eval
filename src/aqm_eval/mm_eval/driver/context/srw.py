@@ -12,8 +12,7 @@ from pydantic import Field, computed_field
 from aqm_eval.logging_aqm_eval import LOGGER
 from aqm_eval.mm_eval.driver.context.base import AbstractDriverContext
 from aqm_eval.mm_eval.driver.helpers import PathExisting
-from aqm_eval.mm_eval.driver.model import Model, ModelRole
-from aqm_eval.mm_eval.driver.package import ChemEvalPackage, PackageKey, TaskKey
+from aqm_eval.mm_eval.driver.package import AbstractEvalPackage, ChemEvalPackage, MetEvalPackage, PackageKey, TaskKey
 
 try:
     from uwtools.api.config import YAMLConfig, get_yaml_config
@@ -93,6 +92,11 @@ class SRWContext(AbstractDriverContext):
 
     @computed_field
     @cached_property
+    def mm_obs_ish_fn_template(self) -> str:  # tdk:last: ish or met?
+        return self.find_nested_key(("task_mm_prep", "MM_OBS_ISH_FN_TEMPLATE"))
+
+    @computed_field
+    @cached_property
     def link_simulation(self) -> tuple[str, ...]:
         return tuple(set([f"{str(ii.year)}*" for ii in [self.datetime_first_cycl, self.datetime_last_cycl]]))
 
@@ -114,16 +118,20 @@ class SRWContext(AbstractDriverContext):
         return PathExisting(self.find_nested_key(("platform", "FIXshp"))).absolute().resolve(strict=True)
 
     @cached_property
-    def mm_packages(self) -> tuple[ChemEvalPackage, ...]:
-        ret = []
-        use_base_model = self.mm_base_model_expt_dir is not None
+    def mm_packages(self) -> tuple[AbstractEvalPackage, ...]:
+        ret: list[AbstractEvalPackage] = []
+        mapping = {PackageKey.CHEM: ChemEvalPackage, PackageKey.MET: MetEvalPackage}
         for package_key in self.mm_package_keys:
-            match package_key:
-                case PackageKey.CHEM:
-                    klass = ChemEvalPackage
-                case _:
-                    raise ValueError(package_key)
-            ret.append(klass(root_dir=self.mm_run_dir, use_base_model=use_base_model))
+            # tdk:last: replace with dedicated function in package.py
+            ret.append(
+                mapping[package_key](
+                    root_dir=self.mm_run_dir,
+                    mm_eval_model_expt_dir=self.expt_dir,
+                    link_simulation=self.link_simulation,
+                    link_alldays_path=self.link_alldays_path,
+                    mm_base_model_expt_dir=self.mm_base_model_expt_dir,
+                )
+            )
         return tuple(ret)
 
     @cached_property
@@ -145,35 +153,6 @@ class SRWContext(AbstractDriverContext):
     @cached_property
     def yaml_srw_config_paths(self) -> tuple[PathExisting, ...]:
         return self.config_path_user, self.config_path_rocoto, self.config_path_var_defns
-
-    @cached_property
-    def mm_models(self) -> tuple[Model, ...]:
-        ret = [
-            Model(
-                expt_dir=self.expt_dir,
-                label="eval_aqm",
-                title="Eval AQM",
-                prefix="eval",
-                role=ModelRole.EVAL,
-                dyn_file_template=("dynf*.nc",),
-                cycle_dir_template=self.link_simulation,
-                link_alldays_path=self.link_alldays_path,
-            )
-        ]
-        if self.mm_base_model_expt_dir is not None:
-            ret.append(
-                Model(
-                    expt_dir=self.expt_dir,
-                    label="base_aqm",
-                    title="Base AQM",
-                    prefix="base",
-                    role=ModelRole.BASE,
-                    dyn_file_template=("dynf*.nc",),
-                    cycle_dir_template=self.link_simulation,
-                    link_alldays_path=self.link_alldays_path,
-                )
-            )
-        return tuple(ret)
 
     def find_nested_key(self, key_tuple: tuple[str, ...]) -> Any:
         """Find a nested key in the YAML dictionaries using a tuple of string keys.
@@ -209,7 +188,7 @@ class SRWContext(AbstractDriverContext):
                 LOGGER(f"{package_run_dir=} does not exist. creating.")
                 package_run_dir.mkdir(exist_ok=True, parents=True)
 
-            cfg = {"ctx": self, "mm_tasks": tuple([ii.value for ii in package.tasks])}
+            cfg = {"ctx": self, "mm_tasks": tuple([ii.value for ii in package.tasks]), "package": package}
             namelist_config_str = self.j2_env.get_template(package.namelist_template).render(cfg)
             namelist_config = yaml.safe_load(namelist_config_str)
             with open(package_run_dir / "namelist.yaml", "w") as f:
