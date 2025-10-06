@@ -38,7 +38,7 @@ class PackageKey(StrEnum):
 
     CHEM = "chem"
     MET = "met"  # tdk:last: should this be named ish or met?
-    AQS_PM25 = "aqs_pm25"
+    AQS_PM = "aqs_pm"
     VOCS = "vocs"
 
 
@@ -171,17 +171,7 @@ class MetEvalPackage(AbstractEvalPackage):
             TaskKey.STATS,
         )
 
-    # @field_validator('models', mode="before")
-    # def _validate_models_(cls, value: tuple[Model, ...]) -> tuple[Model, ...]:
-    #     new_models = []
-    #     for model in value:
-    #         data = model.model_dump()
-    #         data["prefix"] = data["prefix"] + "_ish"
-    #         new_models.append(Model.model_validate(data))
-    #     return tuple(new_models)
-
     def initialize(self) -> None:
-        # tdk: need to handle case with a base model as well!
         self._ish_conversion_()
 
     @log_it
@@ -296,8 +286,24 @@ class MetEvalPackage(AbstractEvalPackage):
         subprocess.check_call(local_cmd)
 
 
+class AQS_PMEvalPackage(AbstractEvalPackage):
+    """Defines a AQS PM evaluation package."""
+
+    key: PackageKey = PackageKey.AQS_PM
+    namelist_template: str = "namelist.aqs.pm.j2"
+
+
 def _assert_file_exists_(path: Path) -> None:
     if not path.exists():
         raise FileNotFoundError(f"file does not exist: {path}")
     if not path.is_file():
         raise ValueError(f"path is not a file: {path}")
+
+
+def package_key_to_class(key: PackageKey) -> type[AbstractEvalPackage]:
+    mapping = {
+        PackageKey.CHEM: ChemEvalPackage,
+        PackageKey.MET: MetEvalPackage,
+        PackageKey.AQS_PM: AQS_PMEvalPackage,
+    }
+    return mapping[key]

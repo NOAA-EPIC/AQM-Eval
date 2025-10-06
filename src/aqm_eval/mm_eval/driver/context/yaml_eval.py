@@ -11,7 +11,7 @@ from aqm_eval.logging_aqm_eval import LOGGER
 from aqm_eval.mm_eval.driver.context.base import AbstractDriverContext
 from aqm_eval.mm_eval.driver.helpers import PathExisting
 from aqm_eval.mm_eval.driver.model import Model, ModelRole
-from aqm_eval.mm_eval.driver.package import AbstractEvalPackage, ChemEvalPackage, TaskKey
+from aqm_eval.mm_eval.driver.package import AbstractEvalPackage, PackageKey, TaskKey, package_key_to_class
 
 
 def _get_or_create_path_(path: str | Path) -> PathExisting:
@@ -62,16 +62,16 @@ class YAMLContext(AbstractDriverContext):
 
     @cached_property
     def mm_packages(self) -> tuple[AbstractEvalPackage, ...]:
-        # tdk: these need to be pulled from the yaml file. new entry?
-        return (
-            ChemEvalPackage(
-                root_dir=self.mm_output_dir,
-                mm_eval_model_expt_dir=self.expt_dir,
-                mm_base_model_expt_dir=self.mm_base_model_expt_dir,
-                link_simulation=self.link_simulation,
-                link_alldays_path=self.link_alldays_path,
-            ),
+        package_key = PackageKey(self._config_data["package_key"])
+        klass = package_key_to_class(package_key)
+        data = dict(
+            root_dir=self.mm_output_dir,
+            mm_eval_model_expt_dir=self.expt_dir,
+            mm_base_model_expt_dir=self.mm_base_model_expt_dir,
+            link_simulation=self.link_simulation,
+            link_alldays_path=self.link_alldays_path,
         )
+        return (klass.model_validate(data),)
 
     @computed_field
     @cached_property
