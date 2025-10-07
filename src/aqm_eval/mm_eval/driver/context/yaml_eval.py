@@ -11,7 +11,7 @@ from aqm_eval.logging_aqm_eval import LOGGER
 from aqm_eval.mm_eval.driver.context.base import AbstractDriverContext
 from aqm_eval.mm_eval.driver.helpers import PathExisting
 from aqm_eval.mm_eval.driver.model import Model, ModelRole
-from aqm_eval.mm_eval.driver.package import ChemEvalPackage, TaskKey
+from aqm_eval.mm_eval.driver.package import AbstractEvalPackage, PackageKey, TaskKey, package_key_to_class
 
 
 def _get_or_create_path_(path: str | Path) -> PathExisting:
@@ -25,6 +25,25 @@ class YAMLContext(AbstractDriverContext):
     model_config = {"frozen": True}
 
     yaml_config: PathExisting = Field(description="Path to the YAML configuration file for the MM package.")
+
+    @computed_field
+    @cached_property
+    def expt_dir(self) -> PathExisting:
+        # tdk: make abstract
+        return PathExisting(self._config_data["link_eval_path"])
+
+    @computed_field
+    @cached_property
+    def mm_base_model_expt_dir(self) -> PathExisting:
+        # tdk: make abstract
+        return PathExisting(self._config_data["link_base_path"])
+
+    @computed_field
+    @cached_property
+    def link_simulation(self) -> tuple[str, ...]:
+        # tdk: make abstract
+        value = self._config_data["link_simulation"].replace("/", "")
+        return tuple(value)
 
     @computed_field
     @cached_property
@@ -42,13 +61,17 @@ class YAMLContext(AbstractDriverContext):
         return PathExisting(self._config_data["cartopy_data_dir"])
 
     @cached_property
-    def mm_packages(self) -> tuple[ChemEvalPackage, ...]:
-        return (
-            ChemEvalPackage(
-                root_dir=self.mm_output_dir,
-                use_base_model=True,
-            ),
+    def mm_packages(self) -> tuple[AbstractEvalPackage, ...]:
+        package_key = PackageKey(self._config_data["package_key"])
+        klass = package_key_to_class(package_key)
+        data = dict(
+            root_dir=self.mm_output_dir,
+            mm_eval_model_expt_dir=self.expt_dir,
+            mm_base_model_expt_dir=self.mm_base_model_expt_dir,
+            link_simulation=self.link_simulation,
+            link_alldays_path=self.link_alldays_path,
         )
+        return (klass.model_validate(data),)
 
     @computed_field
     @cached_property

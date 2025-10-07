@@ -9,8 +9,7 @@ from pydantic import BaseModel, computed_field
 
 from aqm_eval.logging_aqm_eval import LOGGER
 from aqm_eval.mm_eval.driver.helpers import PathExisting
-from aqm_eval.mm_eval.driver.model import Model
-from aqm_eval.mm_eval.driver.package import ChemEvalPackage
+from aqm_eval.mm_eval.driver.package import AbstractEvalPackage
 
 
 class AbstractDriverContext(ABC, BaseModel):
@@ -37,49 +36,16 @@ class AbstractDriverContext(ABC, BaseModel):
 
     @cached_property
     @abstractmethod
-    def mm_packages(self) -> tuple[ChemEvalPackage, ...]:
+    def mm_packages(self) -> tuple[AbstractEvalPackage, ...]:
         """
         Returns
         -------
-        tuple[ChemEvalPackage, ...]
+        tuple[AbstractEvalPackage, ...]
             Evaluation packages to initialize and run. An evaluation package is a collection of
             evaluation plots and statistics for specific prognostic variables and observational
             datasets.
         """
         ...
-
-    @cached_property
-    @abstractmethod
-    def mm_models(self) -> tuple[Model, ...]:
-        """
-        Returns
-        -------
-        tuple[Model, ...]
-            The models to use in the evaluation. At most, this can contain two models: the
-            "evaluation" model and an optional "base" model. If two models are returned,
-            "scorecards" can be created.
-        """
-        ...
-
-    @cached_property
-    def mm_model_labels(self) -> list[str]:
-        """
-        Returns
-        -------
-        list[str]
-            Model labels used for MM plotting.
-        """
-        return [mm_model.label for mm_model in self.mm_models]
-
-    @cached_property
-    def mm_model_titles_j2(self) -> str:
-        """
-        Returns
-        -------
-        list[str]
-            Model titles used for MM plotting, converted into a format suitable for ``jinja2``.
-        """
-        return ", ".join([f'"{ii.title}"' for ii in self.mm_models])
 
     @computed_field(description="Path template to select AirNow observational. Wildcards may be used to select multiple files.")
     @cached_property
