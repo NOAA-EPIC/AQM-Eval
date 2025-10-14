@@ -6,17 +6,13 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any
 
-import yaml
 from pydantic import Field, computed_field
 
 from aqm_eval.logging_aqm_eval import LOGGER
 from aqm_eval.mm_eval.driver.context.base import AbstractDriverContext
 from aqm_eval.mm_eval.driver.helpers import PathExisting
 from aqm_eval.mm_eval.driver.package import (
-    AbstractEvalPackage,
     PackageKey,
-    TaskKey,
-    package_key_to_class,
 )
 
 try:
@@ -32,6 +28,11 @@ def _convert_date_string_to_mm_(date_str: str) -> str:
 
 class SRWContext(AbstractDriverContext):
     expt_dir: PathExisting = Field(description="Experiment directory.")
+
+    @computed_field
+    @cached_property
+    def mm_eval_model_expt_dir(self) -> PathExisting:
+        return self.expt_dir
 
     @computed_field
     @cached_property
@@ -71,6 +72,7 @@ class SRWContext(AbstractDriverContext):
     @computed_field
     @cached_property
     def mm_output_dir(self) -> PathExisting:
+        # tdk: this needs to be on the package level - too much in regular output directory
         config_path = self.find_nested_key(("task_mm_prep", "MM_OUTPUT_DIR"))
         if config_path is None:
             config_path = self.expt_dir / "mm_output"
@@ -115,12 +117,12 @@ class SRWContext(AbstractDriverContext):
     def link_simulation(self) -> tuple[str, ...]:
         return tuple(set([f"{str(ii.year)}*" for ii in [self.datetime_first_cycl, self.datetime_last_cycl]]))
 
-    @computed_field
-    @cached_property
-    def link_alldays_path(self) -> PathExisting:
-        ret = self.mm_run_dir / "Alldays"
-        ret.mkdir(exist_ok=True, parents=True)
-        return ret
+    # @computed_field #tdk:last: remove
+    # @cached_property
+    # def link_alldays_path(self) -> PathExisting:
+    #     ret = self.mm_run_dir / "Alldays"
+    #     ret.mkdir(exist_ok=True, parents=True)
+    #     return ret
 
     @computed_field
     @cached_property
@@ -132,20 +134,21 @@ class SRWContext(AbstractDriverContext):
     def cartopy_data_dir(self) -> PathExisting:
         return PathExisting(self.find_nested_key(("platform", "FIXshp"))).absolute().resolve(strict=True)
 
-    @cached_property
-    def mm_packages(self) -> tuple[AbstractEvalPackage, ...]:
-        ret: list[AbstractEvalPackage] = []
-        for package_key in self.mm_package_keys:
-            klass = package_key_to_class(package_key)
-            data = dict(
-                root_dir=self.mm_run_dir,
-                mm_eval_model_expt_dir=self.expt_dir,
-                link_simulation=self.link_simulation,
-                link_alldays_path=self.link_alldays_path,
-                mm_base_model_expt_dir=self.mm_base_model_expt_dir,
-            )
-            ret.append(klass.model_validate(data))
-        return tuple(ret)
+    # @cached_property
+    # def mm_packages(self) -> tuple[AbstractEvalPackage, ...]:
+    #     ret: list[AbstractEvalPackage] = []
+    #     for package_key in self.mm_package_keys:
+    #         klass = package_key_to_class(package_key)
+    #         data = dict(
+    #             root_dir=self.mm_run_dir,
+    #             root_output_dir=self.mm_output_dir,
+    #             link_simulation=self.link_simulation,
+    #             # link_alldays_path=self.link_alldays_path, #tdk:last: rm
+    #             mm_base_model_expt_dir=self.mm_base_model_expt_dir,
+    #             template_dir=self.template_dir,
+    #         )
+    #         ret.append(klass.model_validate(data))
+    #     return tuple(ret)
 
     @cached_property
     def datetime_first_cycl(self) -> datetime:
@@ -192,38 +195,3 @@ class SRWContext(AbstractDriverContext):
                 )
                 raise
         raise KeyError(f"{key_tuple=} not found in any YAML files: {self.yaml_data.keys()}")
-
-    def create_control_configs(self) -> None:
-        for package in self.mm_packages:
-            package_run_dir = package.run_dir
-            LOGGER(f"{package_run_dir=}")
-            if not package_run_dir.exists():
-                LOGGER(f"{package_run_dir=} does not exist. creating.")
-                package_run_dir.mkdir(exist_ok=True, parents=True)
-
-            cfg = {"ctx": self, "mm_tasks": tuple([ii.value for ii in package.tasks]), "package": package}
-            namelist_config_str = self.j2_env.get_template(package.namelist_template).render(cfg)
-            namelist_config = yaml.safe_load(namelist_config_str)
-            with open(package_run_dir / "namelist.yaml", "w") as f:
-                f.write(namelist_config_str)
-
-            assert isinstance(cfg["mm_tasks"], tuple)
-            for task in cfg["mm_tasks"]:
-                match task:
-                    case TaskKey.SCORECARD_RMSE:
-                        namelist_config["scorecard_eval_method"] = '"RMSE"'
-                    case TaskKey.SCORECARD_IOA:
-                        namelist_config["scorecard_eval_method"] = '"IOA"'
-                    case TaskKey.SCORECARD_NMB:
-                        namelist_config["scorecard_eval_method"] = '"NMB"'
-                    case TaskKey.SCORECARD_NME:
-                        namelist_config["scorecard_eval_method"] = '"NME"'
-
-                LOGGER(f"{task=}")
-                template = self.j2_env.get_template(f"template_{task}.j2")
-                LOGGER(f"{template=}")
-                config_yaml = template.render(**namelist_config)
-                curr_control_path = package_run_dir / f"control_{task}.yaml"
-                LOGGER(f"{curr_control_path=}")
-                with open(curr_control_path, "w") as f:
-                    f.write(config_yaml)
