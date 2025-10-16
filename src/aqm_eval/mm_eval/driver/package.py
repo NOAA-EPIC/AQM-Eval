@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, computed_field
 from aqm_eval.logging_aqm_eval import LOGGER, log_it
 from aqm_eval.mm_eval.driver.context.base import AbstractDriverContext
 from aqm_eval.mm_eval.driver.model import Model, ModelRole
+from aqm_eval.shared import assert_file_exists, get_or_create_path
 
 
 @unique
@@ -173,8 +174,10 @@ class AbstractEvalPackage(ABC, BaseModel):
         LOGGER(f"{self.ctx=}")
         LOGGER(f"{self.key=}")
 
-        self.link_alldays_path.mkdir(parents=True, exist_ok=False)
-        self.mm_package_output_dir.mkdir(parents=True, exist_ok=False)
+        _ = get_or_create_path(self.ctx.mm_output_dir)
+        _ = get_or_create_path(self.ctx.mm_run_dir)
+        _ = get_or_create_path(self.link_alldays_path, exist_ok=False)
+        _ = get_or_create_path(self.mm_package_output_dir, exist_ok=False)
 
         LOGGER("creating MM control configs")
         self._create_control_configs_()
@@ -369,9 +372,9 @@ class ISH_EvalPackage(AbstractEvalPackage):
                 for fhr in range(1, 25):
                     fhr_str = f"{fhr:02d}"
                     f_phy = dir_path / f"phyf0{fhr_str}.nc"
-                    _assert_file_exists_(f_phy)
+                    assert_file_exists(f_phy)
                     f_dyn = dir_path / f"dynf0{fhr_str}.nc"
-                    _assert_file_exists_(f_dyn)
+                    assert_file_exists(f_dyn)
                     f_out = out_dir / f"{prefix}_{dir_name}_f0{fhr_str}.nc"
 
                     # Define ncap2 commands to run
@@ -438,7 +441,7 @@ class ISH_EvalPackage(AbstractEvalPackage):
                         self._run_ncap2_cmd_(cmd)
 
 
-class AQS_PMEvalPackage(AbstractEvalPackage):
+class AQS_PM_EvalPackage(AbstractEvalPackage):
     """Defines a AQS PM evaluation package."""
 
     key: PackageKey = PackageKey.AQS_PM
@@ -485,9 +488,9 @@ class AQS_PMEvalPackage(AbstractEvalPackage):
                 for fhr in range(1, 25):
                     fhr_str = f"{fhr:02d}"
                     f_phy = dir_path / f"phyf0{fhr_str}.nc"
-                    _assert_file_exists_(f_phy)
+                    assert_file_exists(f_phy)
                     f_dyn = dir_path / f"dynf0{fhr_str}.nc"
-                    _assert_file_exists_(f_dyn)
+                    assert_file_exists(f_dyn)
                     f_out = out_dir / f"{prefix}_{dir_name}_f0{fhr_str}.nc"
 
                     # Define ncap2 commands to run
@@ -659,11 +662,26 @@ class AQS_PMEvalPackage(AbstractEvalPackage):
                         self._run_ncap2_cmd_(cmd)
 
 
-class AQS_VOCEvalPackage(AbstractEvalPackage):
+class AQS_VOC_EvalPackage(AbstractEvalPackage):
     """Defines a AQS VOC evaluation package."""
 
     key: PackageKey = PackageKey.AQS_VOC
     namelist_template: str = "namelist.aqs.voc.j2"
+
+    @computed_field(description="Tasks that the package will run.")
+    @cached_property
+    def tasks(self) -> tuple[TaskKey, ...]:
+        return (
+            TaskKey.SAVE_PAIRED,
+            TaskKey.TIMESERIES,
+            TaskKey.TAYLOR,
+            TaskKey.SPATIAL_BIAS,
+            TaskKey.SPATIAL_OVERLAY,
+            TaskKey.BOXPLOT,
+            TaskKey.MULTI_BOXPLOT,
+            TaskKey.CSI,
+            TaskKey.STATS,
+        )
 
     @log_it
     def initialize(self) -> None:
@@ -672,18 +690,11 @@ class AQS_VOCEvalPackage(AbstractEvalPackage):
             model.create_symlinks()
 
 
-def _assert_file_exists_(path: Path) -> None:
-    if not path.exists():
-        raise FileNotFoundError(f"file does not exist: {path}")
-    if not path.is_file():
-        raise ValueError(f"path is not a file: {path}")
-
-
 def package_key_to_class(key: PackageKey) -> type[AbstractEvalPackage]:
     mapping = {
         PackageKey.CHEM: ChemEvalPackage,
         PackageKey.ISH: ISH_EvalPackage,
-        PackageKey.AQS_PM: AQS_PMEvalPackage,
-        PackageKey.AQS_VOC: AQS_VOCEvalPackage,
+        PackageKey.AQS_PM: AQS_PM_EvalPackage,
+        PackageKey.AQS_VOC: AQS_VOC_EvalPackage,
     }
     return mapping[key]
