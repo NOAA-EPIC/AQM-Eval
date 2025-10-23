@@ -34,14 +34,28 @@ def config_path_user(expt_dir: Path, use_base_model: bool) -> Path:
             "DATE_FIRST_CYCL": "2023060112",
             "DATE_LAST_CYCL": "2023060212",
         },
-        "task_mm_prep": {
-            "MM_OUTPUT_DIR": None,
-            "MM_EVAL_PACKAGES": [ii.value for ii in PackageKey],
-            "MM_OBS_AIRNOW_FN_TEMPLATE": "AirNow_20230601_20230701.nc",
-            "MM_OBS_ISH_FN_TEMPLATE": "ISH_20230601_20230701.nc",
-            "MM_OBS_AQS_PM_FN_TEMPLATE": "AQS_20230801_20230901.nc",
-            "MM_OBS_AQS_VOC_FN_TEMPLATE": "AQS_20230801_20230901.nc",
-            "MM_BASE_MODEL_EXPT_DIR": str(expt_dir) if use_base_model else None,
+        # "task_mm_prep": { #tdk:rm
+        #     "MM_OUTPUT_DIR": None,
+        #     "MM_EVAL_PACKAGES": [ii.value for ii in PackageKey],
+        #     "MM_OBS_AIRNOW_FN_TEMPLATE": "AirNow_20230601_20230701.nc",
+        #     "MM_OBS_ISH_FN_TEMPLATE": "ISH_20230601_20230701.nc",
+        #     "MM_OBS_AQS_PM_FN_TEMPLATE": "AQS_20230801_20230901.nc",
+        #     "MM_OBS_AQS_VOC_FN_TEMPLATE": "AQS_20230801_20230901.nc",
+        #     "MM_BASE_MODEL_EXPT_DIR": str(expt_dir) if use_base_model else None,
+        # },
+        # tdk: turn into pydantic model
+        "melodies_monet_parm": {
+            "aqm": {
+                "output_dir": None,
+                "base_model_expt_dir": str(expt_dir) if use_base_model else None,
+                "packages": {"packages_to_run": [ii.value for ii in PackageKey]},
+                "observation_templates": {
+                    "chem": "AirNow_20230601_20230701.nc",
+                    "ish": "ISH_20230601_20230701.nc",
+                    "aqs_pm": "AQS_20230801_20230901.nc",
+                    "aqs_voc": "AQS_20230801_20230901.nc",
+                },
+            }
         },
     }
     yaml_path = expt_dir / "config.yaml"

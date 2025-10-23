@@ -1,6 +1,7 @@
 """Defines package objects used when generating MM files. A package is a collection of tasks specfiic to an evaluation type."""
 
 import logging
+import re
 from abc import ABC, abstractmethod
 from enum import StrEnum, unique
 from functools import cached_property
@@ -21,7 +22,7 @@ from aqm_eval.logging_aqm_eval import LOGGER, log_it
 from aqm_eval.mm_eval.driver.context.base import AbstractDriverContext
 from aqm_eval.mm_eval.driver.model import Model, ModelRole
 from aqm_eval.settings import SETTINGS
-from aqm_eval.shared import PathExisting, assert_file_exists, get_or_create_path
+from aqm_eval.shared import PathExisting, calc_2d_chunks, get_or_create_path
 
 
 @unique
@@ -57,22 +58,29 @@ class ForecastFileSpec(BaseModel):
     src_dir: PathExisting
     out_dir: PathExisting
     out_prefix: str
-    forecast_hour: int = Field(ge=0, le=24)
+    forecast_hours: tuple[int, ...] = tuple(range(1, 25))
+    # forecast_hour: int = Field(ge=0, le=24)
 
     @computed_field
     @cached_property
-    def dyn_path(self) -> PathExisting:
-        return assert_file_exists(self.src_dir / f"dynf0{self.forecast_hour:02d}.nc")
+    def dyn_path(self) -> tuple[Path, ...]:
+        fns = self.src_dir.glob("dynf*.nc")
+        pattern = re.compile(r".*dynf0+\.nc")
+        ret = [ii for ii in fns if re.match(pattern, ii.name) is None]
+        return tuple(ret)
 
     @computed_field
     @cached_property
-    def phy_path(self) -> PathExisting:
-        return assert_file_exists(self.src_dir / f"phyf0{self.forecast_hour:02d}.nc")
+    def phy_path(self) -> tuple[Path, ...]:
+        fns = self.src_dir.glob("phyf*.nc")
+        pattern = re.compile(r".*phyf0+\.nc")
+        ret = [ii for ii in fns if re.match(pattern, ii.name) is None]
+        return tuple(ret)
 
     @computed_field
     @cached_property
     def out_path(self) -> Path:
-        return self.out_dir / f"{self.out_prefix}_f0{self.forecast_hour:02d}.nc"
+        return self.out_dir / f"{self.out_prefix}.nc"
 
 
 class AbstractEvalPackage(ABC, BaseModel):
@@ -82,6 +90,7 @@ class AbstractEvalPackage(ABC, BaseModel):
     ctx: AbstractDriverContext
     key: PackageKey = Field(description="MM package key.")
     namelist_template: str = Field(description="Package template file.")
+    tasks_default: tuple[TaskKey, ...] = Field(description="Default tasks for the package.")
 
     @computed_field(description="Run directory for the MM evaluation package.")
     @cached_property
@@ -107,9 +116,9 @@ class AbstractEvalPackage(ABC, BaseModel):
     @cached_property
     def tasks(self) -> tuple[TaskKey, ...]:
         if self.ctx.mm_base_model_expt_dir is not None:
-            return tuple([ii for ii in TaskKey])
+            return self.tasks_default
         else:
-            return tuple([ii for ii in TaskKey if not ii.name.startswith("SCORECARD")])
+            return tuple([ii for ii in self.tasks_default if not ii.name.startswith("SCORECARD")])
 
     @cached_property
     def task_control_filenames(self) -> set[str]:
@@ -197,13 +206,13 @@ class AbstractEvalPackage(ABC, BaseModel):
                 LOGGER(exc_info=ValueError(f"no cycle directories found in {expt_dir=}"))
             for dir_path in dirlist:
                 dir_name = dir_path.name
-                for fhr in range(1, 25):
-                    yield ForecastFileSpec(
-                        src_dir=dir_path,
-                        out_dir=model.link_alldays_path,
-                        out_prefix=f"{model.prefix}_{dir_name}",
-                        forecast_hour=fhr,
-                    )
+                # for fhr in range(1, 25):
+                yield ForecastFileSpec(
+                    src_dir=dir_path,
+                    out_dir=model.link_alldays_path,
+                    out_prefix=f"{model.prefix}_{dir_name}",
+                    # forecast_hour=fhr,
+                )
 
     @log_it
     def initialize(self) -> None:
@@ -245,8 +254,7 @@ class AbstractEvalPackage(ABC, BaseModel):
         LOGGER(f"{finalize=}")
 
         if task_key not in self.tasks:
-            LOGGER(f"{task_key=} not in {self.tasks=}. returning.", level=logging.WARN)
-            return
+            LOGGER(exc_info=ValueError(f"{task_key=} not in {self.tasks=}. returning."))
 
         assert self.run_dir.exists()
 
@@ -334,10 +342,11 @@ class AbstractDaskOperation(ABC, BaseModel):
     model_config = {"frozen": True}
 
     out_path: Path
-    dyn_path: PathExisting
-    phy_path: PathExisting
+    dyn_path: tuple[Path, ...]
+    phy_path: tuple[Path, ...]
     dask_num_workers: int
-    chunks: dict[str, int] | Literal["auto"] = "auto"
+    surf_only: bool
+    chunks: dict[str, int] | Literal["auto", "auto-aqm-eval"] = {"time": 1}
 
     dyn_varnames: tuple[str, ...]
     phy_varnames: tuple[str, ...]
@@ -355,13 +364,17 @@ class AbstractDaskOperation(ABC, BaseModel):
             new_fields_dyn = {ii: dyn_dataset[ii] for ii in self.dyn_varnames}
             new_fields_phy = {ii: phy_dataset[ii] for ii in self.phy_varnames}
             new_fields = {**new_fields_dyn, **new_fields_phy}
+            LOGGER("Create merged dataset", level=local_log_level)
             ds = xr.Dataset(new_fields)
-
             ds.attrs = dyn_dataset.attrs
 
+            LOGGER("Before compute derived fields", level=local_log_level)
             ds = self._compute_derived_fields_(ds)
+            LOGGER("After compute derived fields", level=local_log_level)
 
+            LOGGER("Before ds.compute", level=local_log_level)
             ds = ds.compute()
+            LOGGER("After ds.compute", level=local_log_level)
         finally:
             dyn_dataset.close()
             phy_dataset.close()
@@ -375,14 +388,32 @@ class AbstractDaskOperation(ABC, BaseModel):
     @abstractmethod
     def _compute_derived_fields_(self, ds: xr.Dataset) -> xr.Dataset: ...
 
-    def _open_dataset_(self, target: str) -> xr.Dataset:
+    def _open_dataset_(self, target: Literal["phy_path", "dyn_path"]) -> xr.Dataset:
         path = getattr(self, target)
-        LOGGER(f"Load {path}", level=logging.DEBUG)
-        ds = xr.open_dataset(path, chunks=self.chunks)
-        # ds = ds.isel(pfull=slice(0, 1))
-        LOGGER(f"{ds.dims=}", level=logging.DEBUG)
+        local_log_level = logging.DEBUG
+        LOGGER(f"Load {path}", level=local_log_level)
+        local_chunks: dict[str, int] | Literal["auto"] = "auto"
+        if self.chunks == "auto-aqm-eval":
+            with xr.open_mfdataset(path, concat_dim="time", combine="nested") as ds:
+                dims_to_chunk = {ii: ds.sizes[ii] for ii in ["grid_xt", "grid_yt"]}
+                local_chunks = calc_2d_chunks(dims_to_chunk, self.dask_num_workers - ds.sizes["time"])
+            LOGGER(f"calculated chunks {local_chunks=}", level=local_log_level)
+        else:
+            local_chunks = self.chunks
+        ds = xr.open_mfdataset(path, chunks=local_chunks, concat_dim="time", combine="nested")
+        LOGGER(f"xr.open_mfdataset {ds=}", level=local_log_level)
+        if self.surf_only:
+            ds = ds.isel(pfull=slice(0, 1))
+            if "phalf" in ds.dims:
+                ds = ds.isel(phalf=slice(0, 1))
+            if "ak" in ds.attrs:
+                ds.attrs["ak"] = ds.attrs["ak"][0:2]
+            if "bk" in ds.attrs:
+                ds.attrs["bk"] = ds.attrs["bk"][0:2]
+        LOGGER(f"{ds.dims=}", level=local_log_level)
         if self.chunks == "auto":
             ds = ds.chunk(self.chunks)
+        LOGGER(f"exiting _open_dataset_ {ds=}", level=local_log_level)
         return ds
 
 
@@ -397,13 +428,14 @@ class AbstractDaskEvalPackage(AbstractEvalPackage):
     @log_it
     def _run_dask_operations_(self) -> None:
         for spec in self.iter_forecast_file_specs():
+            LOGGER(f"{spec=}")
             op = self.klass_dask_operation.model_validate(
                 dict(
                     out_path=spec.out_path,
                     dyn_path=spec.dyn_path,
                     phy_path=spec.phy_path,
                     dask_num_workers=SETTINGS.dask_num_workers,
-                    chunks={"grid_xt": 100, "grid_yt": 100},
+                    surf_only=True,
                 )
             )
             op.run()

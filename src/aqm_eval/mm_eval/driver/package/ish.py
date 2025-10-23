@@ -59,22 +59,18 @@ class ISH_EvalPackage(AbstractDaskEvalPackage):
 
     key: PackageKey = PackageKey.ISH
     namelist_template: str = "namelist.ish.j2"
+    tasks_default: tuple[TaskKey, ...] = (
+        TaskKey.SAVE_PAIRED,
+        TaskKey.TIMESERIES,
+        TaskKey.TAYLOR,
+        TaskKey.SPATIAL_BIAS,
+        TaskKey.SPATIAL_OVERLAY,
+        TaskKey.BOXPLOT,
+        TaskKey.STATS,
+    )
     klass_dask_operation: type[AbstractDaskOperation] = ISH_PreprocessDaskOperation
 
     @computed_field(description="Prefix for each model role.")
     @cached_property
     def model_prefixes(self) -> dict[ModelRole, str]:
         return {ii: ii.value + "_ish" for ii in ModelRole}
-
-    @computed_field(description="Tasks that the package will run.")
-    @cached_property
-    def tasks(self) -> tuple[TaskKey, ...]:
-        return (
-            TaskKey.SAVE_PAIRED,
-            TaskKey.TIMESERIES,
-            TaskKey.TAYLOR,
-            TaskKey.SPATIAL_BIAS,
-            TaskKey.SPATIAL_OVERLAY,
-            TaskKey.BOXPLOT,
-            TaskKey.STATS,
-        )
