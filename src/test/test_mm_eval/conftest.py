@@ -5,6 +5,7 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from aqm_eval.mm_eval.driver.context.srw import SRWContext
+from aqm_eval.mm_eval.driver.package.core import PackageKey
 
 
 @pytest.fixture(params=[True, False], ids=lambda x: f"use_base_model={x}")
@@ -33,11 +34,28 @@ def config_path_user(expt_dir: Path, use_base_model: bool) -> Path:
             "DATE_FIRST_CYCL": "2023060112",
             "DATE_LAST_CYCL": "2023060212",
         },
-        "task_mm_prep": {
-            "MM_OUTPUT_DIR": None,
-            "MM_EVAL_PACKAGES": ["chem"],
-            "MM_OBS_AIRNOW_FN_TEMPLATE": "AirNow_20230601_20230701.nc",
-            "MM_BASE_MODEL_EXPT_DIR": str(expt_dir) if use_base_model else None,
+        # "task_mm_prep": { #tdk:rm
+        #     "MM_OUTPUT_DIR": None,
+        #     "MM_EVAL_PACKAGES": [ii.value for ii in PackageKey],
+        #     "MM_OBS_AIRNOW_FN_TEMPLATE": "AirNow_20230601_20230701.nc",
+        #     "MM_OBS_ISH_FN_TEMPLATE": "ISH_20230601_20230701.nc",
+        #     "MM_OBS_AQS_PM_FN_TEMPLATE": "AQS_20230801_20230901.nc",
+        #     "MM_OBS_AQS_VOC_FN_TEMPLATE": "AQS_20230801_20230901.nc",
+        #     "MM_BASE_MODEL_EXPT_DIR": str(expt_dir) if use_base_model else None,
+        # },
+        # tdk: turn into pydantic model
+        "melodies_monet_parm": {
+            "aqm": {
+                "output_dir": None,
+                "base_model_expt_dir": str(expt_dir) if use_base_model else None,
+                "packages": {"packages_to_run": [ii.value for ii in PackageKey]},
+                "observation_templates": {
+                    "chem": "AirNow_20230601_20230701.nc",
+                    "ish": "ISH_20230601_20230701.nc",
+                    "aqs_pm": "AQS_20230801_20230901.nc",
+                    "aqs_voc": "AQS_20230801_20230901.nc",
+                },
+            }
         },
     }
     yaml_path = expt_dir / "config.yaml"
@@ -67,13 +85,14 @@ def config_path_var_defns(tmp_path: Path, expt_dir: Path) -> Path:
 
 
 @pytest.fixture()
-def dummy_dyn_files(expt_dir: Path) -> None:
+def dummy_phy_dyn_files(expt_dir: Path) -> None:
     for dirname in ["2023060112", "2023060212"]:
-        dyn_dir = expt_dir / dirname
-        dyn_dir.mkdir(exist_ok=False, parents=False)
+        out_dir = expt_dir / dirname
+        out_dir.mkdir(exist_ok=False, parents=False)
         for fhr in range(25):
-            dyn_file = dyn_dir / f"dynf{fhr:03d}.nc"
-            dyn_file.touch()
+            for prefix in ("phy", "dyn"):
+                new_file = out_dir / f"{prefix}f{fhr:03d}.nc"
+                new_file.touch()
 
 
 @pytest.fixture
@@ -82,7 +101,7 @@ def srw_context(
     config_path_user: Path,
     config_path_rocoto: Path,
     config_path_var_defns: Path,
-    dummy_dyn_files: None,
+    dummy_phy_dyn_files: None,
 ) -> SRWContext:
     return SRWContext(expt_dir=expt_dir)
 
