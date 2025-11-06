@@ -5,37 +5,13 @@ from pathlib import Path
 
 import typer
 
-from aqm_eval.mm_eval.driver.context.yaml_eval import YAMLContext
-from aqm_eval.mm_eval.driver.package.core import PackageKey, TaskKey, package_key_to_class
+from aqm_eval.mm_eval.driver.config import PackageKey, TaskKey
+from aqm_eval.mm_eval.driver.package.core import package_key_to_class
 from aqm_eval.mm_eval.rocoto.srw_render import render_task_group
+from aqm_eval.mm_eval.stats_concat import StatsFileCollection
 
 os.environ["NO_COLOR"] = "1"
 app = typer.Typer(pretty_exceptions_enable=False)
-
-
-@app.command(
-    name="yaml-init",
-    help="Initialize the MELODIES MONET UFS-AQM evaluation from a pure YAML file.",
-)
-def yaml_init(yaml_config: Path = typer.Option(..., "--yaml-config", help="The evaluation's YAML configuration.")) -> None:
-    ctx = YAMLContext(yaml_config=yaml_config)
-    klass = package_key_to_class(ctx.mm_package_key)
-    package = klass.model_validate(dict(ctx=ctx))
-    package.initialize()
-
-
-@app.command(
-    name="yaml-run",
-    help="Run the MELODIES MONET UFS-AQM evaluation using a pure YAML file.",
-)
-def yaml_run(
-    yaml_config: Path = typer.Option(..., "--yaml-config", help="The evaluation's YAML configuration."),
-    task_selector: TaskKey = typer.Option(..., "--task", help="Task selector."),
-) -> None:
-    ctx = YAMLContext(yaml_config=yaml_config)
-    klass = package_key_to_class(ctx.mm_package_key)
-    package = klass.model_validate(dict(ctx=ctx))
-    package.run(task_key=task_selector)
 
 
 @app.command(
@@ -79,6 +55,21 @@ def srw_task_group(
     out_dir: Path = typer.Option(..., "--out-dir", help="Output directory for the task group YAML.", file_okay=False),
 ) -> None:
     render_task_group(out_dir)
+
+
+@app.command(
+    name="concat-stats",
+    help="Concatenate MM stats files from all packages and tasks into a single CSV file.",
+)
+def concat_stats(
+    root_dir: Path = typer.Option(..., "--root-dir", help="Root directory containing MM stats files.", file_okay=False),
+    out_path: Path = typer.Option(
+        ..., "--out-path", help="Output path for the concatenated CSV file.", exists=False, dir_okay=False
+    ),
+) -> None:
+    sfile_coll = StatsFileCollection.from_dir(root_dir)
+    df = sfile_coll.as_dataframe()
+    df.to_csv(out_path)
 
 
 if __name__ == "__main__":

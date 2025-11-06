@@ -6,7 +6,8 @@ import jinja2
 from pydantic import BaseModel, computed_field
 
 from aqm_eval.logging_aqm_eval import LOGGER, log_it
-from aqm_eval.mm_eval.driver.package.core import PackageKey, TaskKey, package_key_to_class
+from aqm_eval.mm_eval.driver.config import PackageKey, TaskKey
+from aqm_eval.mm_eval.driver.package.core import package_key_to_class
 
 
 class AbstractExecutionData(ABC, BaseModel):
@@ -15,11 +16,11 @@ class AbstractExecutionData(ABC, BaseModel):
 
     @cached_property
     def execution_host(self) -> str:
-        return f"{self.host}.{self.key.value}.execution.batchargs"
+        return f"{self.host}.{self.key.value}.execution.prep.batchargs"
 
     @cached_property
     def nodes(self) -> str:
-        return "{{{{ {host}.nodes }}}}:ppn={{{{ {host}.tasks_per_node }}}}".format(host=self.execution_host)
+        return "{{{{ {host}.nodes }}}}:ppn={{{{ {host}.tasks_per_node }}}}".format(host=self.execution_host)  # noqa: E501
 
     @cached_property
     def nprocs(self) -> str:
@@ -32,11 +33,33 @@ class AbstractExecutionData(ABC, BaseModel):
 
 class TaskData(AbstractExecutionData):
     key: TaskKey
-    host: str = "melodies_monet_parm.aqm.tasks"
+    key_package: PackageKey
+    host: str = "melodies_monet_parm.aqm.packages"
+    fallback_host: str = "melodies_monet_parm.aqm.task_defaults.execution"
 
     @cached_property
     def execution_host(self) -> str:
-        return f"{self.host}.execution.batchargs"
+        return '{}.{}.execution.tasks.get("{}", {}).batchargs'.format(
+            self.host, self.key_package.value, self.key.value, self.fallback_host
+        )
+
+    @cached_property
+    def nodes(self) -> str:
+        return '{{{{ {host}.get("nodes", {fallback_host}.batchargs.nodes) }}}}:ppn={{{{ {host}.get("tasks_per_node", {fallback_host}.batchargs.tasks_per_node) }}}}'.format(  # noqa: E501
+            host=self.execution_host, fallback_host=self.fallback_host
+        )
+
+    @cached_property
+    def nprocs(self) -> str:
+        return '{{{{ {host}.get("nodes", {fallback_host}.batchargs.nodes) * {host}.get("tasks_per_node", {fallback_host}.batchargs.tasks_per_node) }}}}'.format(  # noqa: E501
+            host=self.execution_host, fallback_host=self.fallback_host
+        )
+
+    @cached_property
+    def walltime(self) -> str:
+        return '{{{{ {host}.get("walltime", {fallback_host}.batchargs.walltime) }}}}'.format(
+            host=self.execution_host, fallback_host=self.fallback_host
+        )
 
 
 class TaskDataCollection(BaseModel):
@@ -51,13 +74,15 @@ class PackageData(AbstractExecutionData):
     @computed_field
     @cached_property
     def tasks(self) -> TaskDataCollection:
-        members = tuple([TaskData(key=ii) for ii in package_key_to_class(self.key).model_fields["tasks_default"].default])
+        members = tuple(
+            [TaskData(key=ii, key_package=self.key) for ii in package_key_to_class(self.key).model_fields["tasks_default"].default]
+        )
         return TaskDataCollection(members=members)
 
     @cached_property
     def should_run(self) -> str:
-        path = f"{self.host}.packages_to_run"
-        ret = '{{% if "{key}" in {path} %}}run_package{{% endif %}}'.format(key=self.key.value, path=path)
+        path = f"{self.host}.{self.key.value}.active"
+        ret = "{{% if {path} %}}run_package{{% endif %}}".format(path=path)
         return ret
 
     @cached_property

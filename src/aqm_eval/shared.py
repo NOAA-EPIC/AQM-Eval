@@ -1,10 +1,12 @@
+import datetime
 import logging
 import subprocess
+from copy import deepcopy
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Iterator
 
 import numpy as np
-from pydantic import BeforeValidator
+from pydantic import BaseModel, BeforeValidator, PlainSerializer
 
 from aqm_eval.logging_aqm_eval import LOGGER
 
@@ -16,15 +18,17 @@ def assert_path_exists(path: Path | str) -> Path:
     return path
 
 
-def _format_path_existing_(value: Path | str) -> Path:
-    LOGGER(f"formatting {value}", level=logging.DEBUG)
-    ret = Path(value)
-    if not ret.exists():
-        LOGGER(exc_info=FileNotFoundError(f"path does not exist: {ret}"))
-    return ret
+PathExisting = Annotated[Path, BeforeValidator(assert_path_exists), PlainSerializer(lambda x: str(x), return_type=str)]
 
 
-PathExisting = Annotated[Path, BeforeValidator(_format_path_existing_)]
+def assert_directory_exists(path: Path | str) -> PathExisting:
+    path = assert_path_exists(path)
+    if not path.is_dir():
+        LOGGER(exc_info=ValueError(f"path is not a directory: {path}"))
+    return path
+
+
+PathExistingDir = Annotated[Path, BeforeValidator(assert_directory_exists), PlainSerializer(lambda x: str(x), return_type=str)]
 
 
 def get_or_create_path(path: str | Path, **kwargs: Any) -> Path:
@@ -44,13 +48,6 @@ def assert_file_exists(path: Path | str) -> Path:
     return path
 
 
-def assert_directory_exists(path: Path | str) -> PathExisting:
-    path = assert_path_exists(path)
-    if not path.is_dir():
-        LOGGER(exc_info=ValueError(f"path is not a directory: {path}"))
-    return path
-
-
 def ncdump(path: Path) -> None:
     result = subprocess.check_output(["ncdump", "-h", str(path)])
     print(result.decode())
@@ -62,3 +59,20 @@ def calc_2d_chunks(dims: dict[str, int], n_chunks: int) -> dict[str, int]:
     per_dim = np.ceil(np.sqrt(n_chunks))
     chunks = {k: int(np.ceil(v / per_dim)) for k, v in dims.items()}
     return chunks
+
+
+class DateRange(BaseModel):
+    start: datetime.datetime
+    end: datetime.datetime
+
+    def iter_by_step(self, step: datetime.timedelta = datetime.timedelta(days=1)) -> Iterator[datetime.datetime]:
+        curr_dt = deepcopy(self.start)
+        while curr_dt <= self.end:
+            try:
+                yield deepcopy(curr_dt)
+            finally:
+                curr_dt += step
+
+    @staticmethod
+    def to_srw_str(target: datetime.datetime) -> str:
+        return target.strftime("%Y%m%d%H")

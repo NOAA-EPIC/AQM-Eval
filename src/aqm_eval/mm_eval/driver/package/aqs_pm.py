@@ -1,17 +1,13 @@
 import logging
-from functools import cached_property
 
 import dask
 import xarray as xr
-from pydantic import computed_field
 
 from aqm_eval.logging_aqm_eval import LOGGER
-from aqm_eval.mm_eval.driver.model import ModelRole
+from aqm_eval.mm_eval.driver.config import PackageKey, TaskKey
 from aqm_eval.mm_eval.driver.package.core import (
     AbstractDaskEvalPackage,
     AbstractDaskOperation,
-    PackageKey,
-    TaskKey,
 )
 
 
@@ -235,9 +231,3 @@ class AQS_PM_EvalPackage(AbstractDaskEvalPackage):
     namelist_template: str = "namelist.aqs.pm.j2"
     tasks_default: tuple[TaskKey, ...] = tuple(TaskKey)
     klass_dask_operation: type[AbstractDaskOperation] = AQS_PM_PreprocessDaskOperation
-
-    @computed_field(description="Prefix for each model role.")
-    @cached_property
-    def model_prefixes(self) -> dict[ModelRole, str]:
-        # We need to differentiate these model prefixes due to transformations required for meteorological variables.
-        return {ii: ii.value + "_pm" for ii in ModelRole}

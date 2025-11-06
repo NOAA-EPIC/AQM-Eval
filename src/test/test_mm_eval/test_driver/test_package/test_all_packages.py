@@ -6,17 +6,16 @@ import xarray as xr
 from pydantic import BaseModel
 from pytest_mock import MockerFixture
 
+from aqm_eval.mm_eval.driver.config import PackageKey, TaskKey
 from aqm_eval.mm_eval.driver.context.srw import SRWContext
 from aqm_eval.mm_eval.driver.package.core import (
     AbstractDaskOperation,
     AbstractEvalPackage,
-    PackageKey,
-    TaskKey,
     package_key_to_class,
 )
 
 
-class MMEvalRunnerTestData(BaseModel):
+class AllPackagesTestData(BaseModel):
     model_config = {"frozen": True}
     ctx: SRWContext
     package_class: type[AbstractEvalPackage]
@@ -30,7 +29,7 @@ def package_key(request: pytest.FixtureRequest) -> PackageKey:
 
 
 @pytest.fixture
-def mm_eval_runner_test_data(srw_context: SRWContext, use_base_model: bool, package_key: PackageKey) -> MMEvalRunnerTestData:
+def all_pkgs_test_data(srw_context: SRWContext, package_key: PackageKey) -> AllPackagesTestData:
     package_class = package_key_to_class(package_key)
     expected_n_links = 25 * 2  # 25 dynf hourly files * 2 cycle directories
     expected_n_dask_run_calls = 0
@@ -40,12 +39,14 @@ def mm_eval_runner_test_data(srw_context: SRWContext, use_base_model: bool, pack
             expected_n_links = 2  # 2 combined files (1 per cycle)
             expected_n_dask_run_calls = expected_n_links  # one call per file created
 
-    if use_base_model:
-        # Two model adjustment
-        expected_n_links *= 2
-        expected_n_dask_run_calls *= 2
+    # Adjust for model count
+    n_models = len(srw_context.mm_config.aqm.models)
+    if srw_context.mm_config.aqm.no_forecast:
+        n_models -= 1
+    expected_n_links *= n_models
+    expected_n_dask_run_calls *= n_models
 
-    return MMEvalRunnerTestData(
+    return AllPackagesTestData(
         expected_n_links=expected_n_links,
         ctx=srw_context,
         package_class=package_class,
@@ -59,8 +60,8 @@ def fake_run(self: AbstractDaskOperation) -> xr.Dataset:
     return xr.Dataset()
 
 
-def test_all_packages(mm_eval_runner_test_data: MMEvalRunnerTestData, mocker: MockerFixture) -> None:
-    package = mm_eval_runner_test_data.package_class.model_validate(dict(ctx=mm_eval_runner_test_data.ctx))
+def test_all_packages(all_pkgs_test_data: AllPackagesTestData, mocker: MockerFixture) -> None:
+    package = all_pkgs_test_data.package_class.model_validate(dict(ctx=all_pkgs_test_data.ctx))
 
     # Mock for dask operations -----------------------------------------------------------------
 
@@ -72,11 +73,11 @@ def test_all_packages(mm_eval_runner_test_data: MMEvalRunnerTestData, mocker: Mo
     package.initialize()
 
     actual_data = [ii.name for ii in package.link_alldays_path.iterdir()]
-    assert len(actual_data) == mm_eval_runner_test_data.expected_n_links
+    assert len(actual_data) == all_pkgs_test_data.expected_n_links
 
     actual_files = package.run_dir.rglob("*.yaml")
     expected_filenames = package.task_control_filenames
-    expected_filenames.update({"namelist.yaml"})
+    expected_filenames.update({"namelist.yaml", "melodies_monet_parm.yaml"})
     assert set([ii.name for ii in actual_files]) == expected_filenames
 
     assert package.link_alldays_path.name in [ii.name for ii in package.run_dir.iterdir()]
@@ -93,7 +94,7 @@ def test_all_packages(mm_eval_runner_test_data: MMEvalRunnerTestData, mocker: Mo
 
     package.run(TaskKey.SAVE_PAIRED)
 
-    assert package.mm_package_output_dir.exists()
+    assert package.output_dir.exists()
 
     m_analysis.read_control.assert_called_once()
     m_analysis.open_models.assert_called_once()
@@ -101,4 +102,4 @@ def test_all_packages(mm_eval_runner_test_data: MMEvalRunnerTestData, mocker: Mo
     m_analysis.pair_data.assert_called_once()
     m_analysis.save_analysis.assert_called_once()
 
-    assert spy_m_dask_op_run.call_count == mm_eval_runner_test_data.expected_n_dask_run_calls
+    assert spy_m_dask_op_run.call_count == all_pkgs_test_data.expected_n_dask_run_calls
