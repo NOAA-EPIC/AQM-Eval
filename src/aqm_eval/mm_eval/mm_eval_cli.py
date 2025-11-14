@@ -7,7 +7,7 @@ import typer
 
 from aqm_eval.mm_eval.driver.config import PackageKey, TaskKey
 from aqm_eval.mm_eval.driver.package.core import package_key_to_class
-from aqm_eval.mm_eval.rocoto.srw_render import render_task_group
+from aqm_eval.mm_eval.rocoto.srw_task_group import srw_data_to_json
 from aqm_eval.mm_eval.stats_concat import StatsFileCollection
 
 os.environ["NO_COLOR"] = "1"
@@ -24,7 +24,7 @@ def srw_init(
 ) -> None:
     from aqm_eval.mm_eval.driver.context.srw import SRWContext
 
-    ctx = SRWContext(expt_dir=expt_dir)
+    ctx = SRWContext.from_expt_dir(expt_dir)
     klass = package_key_to_class(package_selector)
     package = klass.model_validate(dict(ctx=ctx))
     package.initialize()
@@ -41,7 +41,7 @@ def srw_run(
 ) -> None:
     from aqm_eval.mm_eval.driver.context.srw import SRWContext
 
-    ctx = SRWContext(expt_dir=expt_dir)
+    ctx = SRWContext.from_expt_dir(expt_dir)
     klass = package_key_to_class(package_selector)
     package = klass.model_validate(dict(ctx=ctx))
     package.run(task_key=task_selector)
@@ -52,9 +52,9 @@ def srw_run(
     help="Create a YAML-based SRW task group for all packages and tasks.",
 )
 def srw_task_group(
-    out_dir: Path = typer.Option(..., "--out-dir", help="Output directory for the task group YAML.", file_okay=False),
+    srw_data: str = typer.Option(..., "--srw-data"),
 ) -> None:
-    render_task_group(out_dir)
+    srw_data_to_json(srw_data)
 
 
 @app.command(
@@ -67,6 +67,7 @@ def concat_stats(
         ..., "--out-path", help="Output path for the concatenated CSV file.", exists=False, dir_okay=False
     ),
 ) -> None:
+    # tdk:doc
     sfile_coll = StatsFileCollection.from_dir(root_dir)
     df = sfile_coll.as_dataframe()
     df.to_csv(out_path)

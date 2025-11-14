@@ -1,12 +1,16 @@
+import logging
 from datetime import datetime
 from enum import StrEnum, unique
 from functools import cached_property
 from pathlib import Path
 from typing import Any, Mapping
 
+import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from aqm_eval.shared import DateRange, PathExistingDir
+from aqm_eval.logging_aqm_eval import LOGGER
+from aqm_eval.settings import SETTINGS
+from aqm_eval.shared import DateRange, get_str_nested, set_str_nested, update_left
 
 
 @unique
@@ -38,10 +42,25 @@ class PackageKey(StrEnum):
     AQS_VOC = "aqs_voc"
 
 
+@unique
+class PlatformKey(StrEnum):
+    URSA = "ursa"
+    GAEAC6 = "gaeac6"
+    DERECHO = "derecho"
+    ORION = "orion"
+    HERCULES = "hercules"
+
+
 def _is_unique_(v: tuple[Any, ...]) -> tuple[Any, ...]:
     if len(set(v)) != len(v):
         raise ValueError("Values must be unique.")
     return v
+
+
+class PlatformConfig(BaseModel):
+    model_config = {"frozen": True}
+
+    ncores_per_node: int = Field(ge=1)
 
 
 class BatchArgs(BaseModel):
@@ -69,52 +88,17 @@ class PackageConfig(BaseModel):
     model_config = {"frozen": True}
 
     key: PackageKey = Field(exclude=True)
-    observation_template: str  # tdk: can be null if active is false
+    observation_template: str | None = Field(default=None, description="May be null if active is false.")
     mapping: dict[str, str]
     active: bool = True
     tasks_to_exclude: tuple[TaskKey, ...] = tuple()
     execution: PackageExecution = Field(default_factory=lambda x: PackageExecution.model_validate({}))
 
-    @model_validator(mode="before")
-    @classmethod
-    def _validate_model_(cls, values: dict) -> dict:
-        if values.get("mapping") is None:
-            match values["key"]:
-                case PackageKey.CHEM:
-                    mapping = {
-                        "o3_ave": "OZONE",
-                        "pm25_ave": "PM2.5",
-                        "no2_ave": "NO2",
-                        "co": "CO",
-                    }
-                case PackageKey.ISH:
-                    mapping = {
-                        "tmp2m": "temp",
-                        "ws10m": "ws",
-                        "dew_temp": "dew_pt_temp",
-                    }
-                case PackageKey.AQS_VOC:
-                    mapping = {
-                        "etha": "ETHANE",
-                        "prpa": "PROPANE",
-                        "benzene": "BENZENE",
-                        "tol": "TOLUENE",
-                        "isop": "ISOPRENE",
-                    }
-                case PackageKey.AQS_PM:
-                    mapping = {
-                        "pm25_so4": "SO4f",
-                        "pm25_no3": "NO3f",
-                        "pm25_nh4": "NH4+f",
-                        "pm25_ec": "ECf",
-                        "pm25_oc": "OCPM2.5LCTOT",
-                    }
-
-                case _:
-                    raise ValueError(values["key"])
-            values["mapping"] = mapping
-
-        return values
+    @model_validator(mode="after")
+    def _validate_model_after_(self) -> "PackageConfig":
+        if self.active and self.observation_template is None:
+            raise ValueError("observation_template must be set if active is True.")
+        return self
 
 
 class PlotKwargs(BaseModel):
@@ -138,10 +122,10 @@ class AQMModelConfig(BaseModel):
     model_config = {"frozen": True}
 
     key: str = Field(exclude=True)
-    expt_dir: PathExistingDir
-    title: str  # tdk: unique in coll
+    expt_dir: Path
+    title: str
     plot_kwargs: PlotKwargs
-    is_host: bool = False  # tdk: only one model needs to be host = true but must be one
+    is_host: bool = False
     type: str = "rrfs"
     kwargs: dict[str, Any] = {"surf_only": True, "mech": "cb6r3_ae6_aq"}
     radius_of_influence: float = 20000
@@ -159,10 +143,10 @@ class AQMModelConfig(BaseModel):
 class AQMConfig(BaseModel):
     model_config = {"frozen": True}
 
-    models: dict[str, AQMModelConfig] = Field(max_length=4)
+    no_forecast: bool = False
+    models: dict[str, AQMModelConfig]
     packages: dict[PackageKey, PackageConfig] = Field(min_length=1)
     task_defaults: TaskDefaults
-    no_forecast: bool = False
 
     @cached_property
     def host_model(self) -> dict[str, AQMModelConfig]:
@@ -171,6 +155,13 @@ class AQMConfig(BaseModel):
                 return {k: v}
         raise ValueError("No host model found.")
 
+    @cached_property
+    def n_models_to_evaluate(self) -> int:
+        n_models = len(self.models)
+        if self.no_forecast:
+            n_models -= 1
+        return n_models
+
     @model_validator(mode="before")
     @classmethod
     def _validate_model_before_(cls, values: dict) -> dict:
@@ -178,6 +169,8 @@ class AQMConfig(BaseModel):
             for k, v in values[target].items():
                 if isinstance(values[target][k], Mapping):
                     values[target][k]["key"] = k
+        if len(values.get("models", {})) == 0:
+            raise ValueError("At least one model must be specified.")
         return values
 
     @field_validator("models", mode="after")
@@ -186,18 +179,22 @@ class AQMConfig(BaseModel):
         is_host = set([k for k, v in values.items() if v.is_host])
         if len(is_host) != 1:
             raise ValueError(f"Only one model can be host. Found {is_host}.")
+        if len(set([ii.title for ii in values.values()])) != len(values):
+            raise ValueError("Model titles must be unique.")
         return values
 
 
 class Config(BaseModel):
     model_config = {"frozen": True}
 
-    aqm: AQMConfig
     start_datetime: str = Field(description="Evaluation start time in yyyy-mm-dd-HH:MM:SS UTC format.")
     end_datetime: str = Field(description="Evaluation end time in yyyy-mm-dd-HH:MM:SS UTC format.")
-    cartopy_data_dir: PathExistingDir = Field(description="Path to the Cartopy data directory.")
-    output_dir: Path  # tdk:doc: existing directory
+    cartopy_data_dir: Path = Field(description="Path to the Cartopy data directory.")
+    active: bool
+    output_dir: Path
     run_dir: Path
+    aqm: AQMConfig
+    platform_defaults: dict[PlatformKey, PlatformConfig]
 
     _key: str = "melodies_monet_parm"
 
@@ -217,15 +214,34 @@ class Config(BaseModel):
         key = cls._key.default  # type: ignore[attr-defined]
         return cls.model_validate(data[key])
 
-    @staticmethod
-    def update_left(data_left: dict, data_right: dict) -> None:
-        for key, value in data_right.items():
-            # if key not in data_left:
-            #     data_left[key] = value
-            if isinstance(data_left.get(key), Mapping):
-                Config.update_left(data_left[key], value)
-            else:
-                data_left[key] = value
+    @classmethod
+    def from_default_yaml(cls, platform_key: PlatformKey, overrides: dict) -> "Config":
+        raw = (SETTINGS.eval_template_dir / "config-default.yaml").read_text()
+        data = yaml.safe_load(raw)[cls.get_key()]
+        update_left(data, overrides)
+
+        root_aqm = data["aqm"]
+        if len([v for v in root_aqm["models"].values() if v.get("is_host", False)]) != 1:
+            LOGGER("removing default host model (key=eval) since another was provided", level=logging.WARNING)
+            root_aqm["models"].pop("eval")
+
+        for package_key in PackageKey:
+            kp = f"aqm.packages.{package_key.value}.execution.prep.batchargs.tasks_per_node"
+            actual = get_str_nested(data, kp)
+            if actual == "auto":
+                data_kp = f"platform_defaults.{platform_key.value}.ncores_per_node"
+                set_str_nested(data, kp, get_str_nested(data, data_kp))
+
+        if root_aqm["task_defaults"]["execution"]["batchargs"]["tasks_per_node"] == "auto":
+            root_aqm["task_defaults"]["execution"]["batchargs"]["tasks_per_node"] = get_str_nested(
+                data, f"platform_defaults.{platform_key.value}.ncores_per_node"
+            )
+
+        return cls.from_yaml({cls.get_key(): data})
+
+    @classmethod
+    def get_key(cls) -> str:
+        return cls._key.default  # type: ignore[attr-defined]
 
     @model_validator(mode="after")
     def _validate_model_after_(self) -> "Config":
