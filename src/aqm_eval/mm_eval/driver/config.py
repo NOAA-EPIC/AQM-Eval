@@ -51,6 +51,13 @@ class PlatformKey(StrEnum):
     HERCULES = "hercules"
 
 
+@unique
+class ModelRole(StrEnum):
+    UNDEFINED = "undefined"
+    CONTROL = "control"
+    SENSITIVITY = "sensitivity"
+
+
 def _is_unique_(v: tuple[Any, ...]) -> tuple[Any, ...]:
     if len(set(v)) != len(v):
         raise ValueError("Values must be unique.")
@@ -109,8 +116,6 @@ class PlotKwargs(BaseModel):
     linestyle: str = "-"
     markersize: int = 4
 
-    _possible_colors: tuple[str, ...] = ("g", "m", "k", "r", "b", "y")
-
 
 class TaskDefaults(BaseModel):
     model_config = {"frozen": True}
@@ -125,6 +130,7 @@ class AQMModelConfig(BaseModel):
     expt_dir: Path
     title: str
     plot_kwargs: PlotKwargs
+    role: ModelRole = ModelRole.UNDEFINED
     is_host: bool = False
     type: str = "rrfs"
     kwargs: dict[str, Any] = {"surf_only": True, "mech": "cb6r3_ae6_aq"}
@@ -143,10 +149,12 @@ class AQMModelConfig(BaseModel):
 class AQMConfig(BaseModel):
     model_config = {"frozen": True}
 
+    active: bool
     no_forecast: bool = False
     models: dict[str, AQMModelConfig]
     packages: dict[PackageKey, PackageConfig] = Field(min_length=1)
     task_defaults: TaskDefaults
+    enable_scorecards: bool
 
     @cached_property
     def host_model(self) -> dict[str, AQMModelConfig]:
@@ -173,6 +181,26 @@ class AQMConfig(BaseModel):
             raise ValueError("At least one model must be specified.")
         return values
 
+    @model_validator(mode="after")
+    def _validate_model_after_(self) -> "AQMConfig":
+        if self.enable_scorecards:
+            if self.no_forecast:
+                for model in self.models.values():
+                    if model.is_host and model.role != ModelRole.UNDEFINED:
+                        raise ValueError(
+                            "Host model must have an undefined role if enable_scorecards is True and no_forecast is True. "
+                            "The host with no_forecast True will have no data to evaluate!"
+                        )
+            role_check = set([ii.role for ii in self.models.values() if ii.role != ModelRole.UNDEFINED])
+            if len(role_check) != 2 and set(role_check) != {ModelRole.CONTROL, ModelRole.SENSITIVITY}:
+                info = {v.key: v.role for v in self.models.values()}
+                msg = (
+                    f"Scorecards can only be enabled if one model has role 'control' and one other model has role "
+                    f"'sensitivity'. {info}"
+                )
+                raise ValueError(msg)
+        return self
+
     @field_validator("models", mode="after")
     @classmethod
     def _validate_models_after_(cls, values: dict[str, AQMModelConfig]) -> dict[str, AQMModelConfig]:
@@ -192,7 +220,6 @@ class Config(BaseModel):
     start_datetime: str = Field(description="Evaluation start time in yyyy-mm-dd-HH:MM:SS UTC format.")
     end_datetime: str = Field(description="Evaluation end time in yyyy-mm-dd-HH:MM:SS UTC format.")
     cartopy_data_dir: Path = Field(description="Path to the Cartopy data directory.")
-    active: bool
     output_dir: Path
     run_dir: Path
     aqm: AQMConfig
