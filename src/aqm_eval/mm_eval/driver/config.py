@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Any, Mapping
 
 import yaml
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import Field, model_validator
 
+from aqm_eval.base import AeBaseModel
 from aqm_eval.logging_aqm_eval import LOGGER
 from aqm_eval.settings import SETTINGS
 from aqm_eval.shared import DateRange, get_str_nested, set_str_nested, update_left
@@ -77,44 +78,32 @@ def _is_unique_(v: tuple[Any, ...]) -> tuple[Any, ...]:
     return v
 
 
-class ScorecardConfig(BaseModel):
-    model_config = {"frozen": True}
-
+class ScorecardConfig(AeBaseModel):
     key: str = Field(exclude=True)
     control: str
     sensitivity: str
 
 
-class PlatformConfig(BaseModel):
-    model_config = {"frozen": True}
-
+class PlatformConfig(AeBaseModel):
     ncores_per_node: int = Field(ge=1)
 
 
-class BatchArgs(BaseModel):
-    model_config = {"frozen": True}
-
+class BatchArgs(AeBaseModel):
     nodes: int = Field(ge=1, default=1)
     tasks_per_node: int = Field(ge=1, default=1)
     walltime: str = Field(default="01:00:00")
 
 
-class Execution(BaseModel):
-    model_config = {"frozen": True}
-
+class Execution(AeBaseModel):
     batchargs: BatchArgs = Field(default_factory=BatchArgs)
 
 
-class PackageExecution(BaseModel):
-    model_config = {"frozen": True}
-
+class PackageExecution(AeBaseModel):
     prep: Execution
     tasks: dict[TaskKey, Execution]
 
 
-class PackageConfig(BaseModel):
-    model_config = {"frozen": True}
-
+class PackageConfig(AeBaseModel):
     key: PackageKey = Field(exclude=True)
     observation_template: str | None = Field(default=None, description="May be null if active is false.")
     mapping: dict[str, str]
@@ -129,24 +118,18 @@ class PackageConfig(BaseModel):
         return self
 
 
-class PlotKwargs(BaseModel):
-    model_config = {"frozen": True}
-
+class PlotKwargs(AeBaseModel):
     color: str = "g"
     marker: str = "^"
     linestyle: str = "-"
     markersize: int = 4
 
 
-class TaskDefaults(BaseModel):
-    model_config = {"frozen": True}
-
+class TaskDefaults(AeBaseModel):
     execution: Execution
 
 
-class AQMModelConfig(BaseModel):
-    model_config = {"frozen": True}
-
+class AQMModelConfig(AeBaseModel):
     key: str = Field(exclude=True)
     expt_dir: Path
     title: str
@@ -168,9 +151,7 @@ class AQMModelConfig(BaseModel):
         return values
 
 
-class AQMConfig(BaseModel):
-    model_config = {"frozen": True}
-
+class AQMConfig(AeBaseModel):
     active: bool
     no_forecast: bool = False
     models: dict[str, AQMModelConfig]
@@ -215,26 +196,38 @@ class AQMConfig(BaseModel):
                 raise ValueError(f"Scorecard key={k} references non-existent model {v.control=} or {v.sensitivity=}.")
             if self.no_forecast and list(self.host_model.keys())[0] in [v.control, v.sensitivity]:
                 raise ValueError(f"Host model cannot be used for scorecard {k} since no_forecast is True.")
+
+        self._validate_models_after_()
+
         return self
 
-    @field_validator("models", mode="after")
-    @classmethod
-    def _validate_models_after_(cls, values: dict[str, AQMModelConfig]) -> dict[str, AQMModelConfig]:
+    def _validate_models_after_(self) -> None:
+        values = self.models
+
+        for k, v in values.items():
+            if v.key != k:
+                raise ValueError(f"Model key={k} does not match value.key={v.key}.")
+
         is_host = set([k for k, v in values.items() if v.is_host])
         if len(is_host) != 1:
             raise ValueError(f"Only one model can be host. Found {is_host}.")
+
         if len(set([ii.title for ii in values.values()])) != len(values):
             raise ValueError("Model titles must be unique.")
-        # tdk:fix: needs to handle the situation where the color of the host model for an offline case doesn't matter
-        if len(set(ii.plot_kwargs.color for ii in values.values())) != len(values):
+
+        if self.no_forecast:
+            LOGGER("no forecast is True, so host model's color will not be considered", level=logging.WARNING)
+            plot_colors_to_check = [v.plot_kwargs.color for v in values.values() if not v.is_host]
+            n_to_check = len(values) - 1
+        else:
+            plot_colors_to_check = [v.plot_kwargs.color for v in values.values()]
+            n_to_check = len(values)
+        if len(set(plot_colors_to_check)) != n_to_check:
             plot_colors = {k: v.plot_kwargs.color for k, v in values.items()}
             raise ValueError(f"models[].plot_kwargs.color must be unique for each model. {plot_colors=}")
-        return values
 
 
-class Config(BaseModel):
-    model_config = {"frozen": True}
-
+class Config(AeBaseModel):
     start_datetime: str = Field(description="Evaluation start time in yyyy-mm-dd-HH:MM:SS UTC format.")
     end_datetime: str = Field(description="Evaluation end time in yyyy-mm-dd-HH:MM:SS UTC format.")
     cartopy_data_dir: Path = Field(description="Path to the Cartopy data directory.")
