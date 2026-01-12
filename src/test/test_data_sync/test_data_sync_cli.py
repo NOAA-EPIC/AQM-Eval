@@ -19,7 +19,7 @@ def test_help() -> None:
 
         @property
         def doc_text(self) -> str:
-            fixed_up = self.help_text.replace("Usage: root", "aqm-eval data-sync")
+            fixed_up = self.help_text.replace("Usage: root", "aqm-data-sync")
             fixed_up = fixed_up.strip()
             return self.header + "\n" + "```\n" + fixed_up + "\n```\n"
 
