@@ -10,6 +10,7 @@ from pydantic import Field, model_validator
 
 from aqm_eval.base import AeBaseModel
 from aqm_eval.logging_aqm_eval import LOGGER
+from aqm_eval.mm_eval.driver.task.save_paired import SavePaired
 from aqm_eval.settings import SETTINGS
 from aqm_eval.shared import DateRange, get_str_nested, set_str_nested, update_left
 
@@ -111,6 +112,7 @@ class PackageConfig(AeBaseModel):
         description="Path to the observation file with appropriate spatiotemporal forecast "
         "coverage. May be null if active is false.",
     )
+    observation_variables: dict[str, Any]
     mapping: dict[str, str] = Field(description="Maps model variable names to observation variable names.")
     active: bool = Field(default=True, description="If False, package will not be executed.")
     tasks_to_exclude: tuple[TaskKey, ...] = Field(
@@ -136,6 +138,7 @@ class PlotKwargs(AeBaseModel):
 
 class TaskDefaults(AeBaseModel):
     execution: Execution = Field(description="Default execution settings for all tasks.")
+    save_paired: dict = Field(default={}, description="Default save paired settings (SavePaired model).")
 
 
 class AQMModelConfig(AeBaseModel):

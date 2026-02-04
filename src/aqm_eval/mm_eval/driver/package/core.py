@@ -22,7 +22,9 @@ from aqm_eval.logging_aqm_eval import LOGGER, log_it
 from aqm_eval.mm_eval.driver.config import PackageConfig, PackageKey, RunMode, ScorecardMethod, TaskKey
 from aqm_eval.mm_eval.driver.context.base import AbstractDriverContext
 from aqm_eval.mm_eval.driver.model import Model
+from aqm_eval.mm_eval.driver.task.save_paired import SavePairedTask
 from aqm_eval.mm_eval.driver.task.scorecard import ScorecardTask
+from aqm_eval.mm_eval.driver.task.template import TaskTemplate
 from aqm_eval.settings import SETTINGS
 from aqm_eval.shared import PathExisting, assert_directory_exists, calc_2d_chunks, get_or_create_path
 
@@ -87,27 +89,6 @@ class AbstractEvalPackage(ABC, AeBaseModel):
     @cached_property
     def enable_scorecards(self) -> bool:
         return len(self.ctx.mm_config.aqm.scorecards) > 0
-
-    # @cached_property
-    # def mm_model_scorecard_labels(self) -> list[str]:
-    #     return [ii.label for ii in self.mm_scorecard_models]
-
-    # @cached_property
-    # def mm_model_scorecard_titles_j2(self) -> str:
-    #     return ", ".join([f'"{ii.cfg.title}"' for ii in self.mm_scorecard_models])
-
-    # @cached_property
-    # def mm_scorecard_models(self) -> tuple[Model, Model]:
-    #     if not self.enable_scorecards:
-    #         raise ValueError("scorecards are not enabled")
-    #     models: list[Model] = []
-    #     for role in [ModelRole.SENSITIVITY, ModelRole.CONTROL]:
-    #         for model in self.mm_models:
-    #             if model.cfg.role == role:
-    #                 models.append(model)
-    #     if len(models) != 2:
-    #         raise ValueError
-    #     return models[0], models[1]
 
     @cached_property
     def task_control_filenames(self) -> tuple[str, ...]:
@@ -314,26 +295,56 @@ class AbstractEvalPackage(ABC, AeBaseModel):
         assert isinstance(cfg["mm_tasks"], tuple)
         for task in cfg["mm_tasks"]:
             assert isinstance(task, str)
-            # match task:
-            #     case TaskKey.SCORECARD_RMSE:
-            #         namelist_config["scorecard_eval_method"] = '"RMSE"'
-            #     case TaskKey.SCORECARD_IOA:
-            #         namelist_config["scorecard_eval_method"] = '"IOA"'
-            #     case TaskKey.SCORECARD_NMB:
-            #         namelist_config["scorecard_eval_method"] = '"NMB"'
-            #     case TaskKey.SCORECARD_NME:
-            #         namelist_config["scorecard_eval_method"] = '"NME"'
 
             LOGGER(f"{task=}")
             template = self.j2_env.get_template(f"template_{task}.j2")
             LOGGER(f"{template=}")
-            if TaskKey(task) == TaskKey.SCORECARD:
-                self._create_control_configs_for_scorecards_(namelist_config, template)
-            else:
-                config_yaml = template.render({**namelist_config})
-                curr_control_path = package_run_dir / f"control_{task}.yaml"
-                LOGGER(f"{curr_control_path=}")
-                curr_control_path.write_text(config_yaml)
+            task_key = TaskKey(task)
+            match task_key:
+                case TaskKey.SCORECARD:
+                    self._create_control_configs_for_scorecards_(namelist_config, template)
+                case TaskKey.SAVE_PAIRED:
+                    task_template = self._create_task_template_(namelist_config)
+                    curr_control_path = package_run_dir / f"control_{task}.yaml"
+                    LOGGER(f"{curr_control_path=}")
+                    curr_control_path.write_text(yaml.safe_dump(task_template.to_yaml(), sort_keys=False))
+                case _:
+                    config_yaml = template.render({**namelist_config})
+                    curr_control_path = package_run_dir / f"control_{task}.yaml"
+                    LOGGER(f"{curr_control_path=}")
+                    curr_control_path.write_text(config_yaml)
+
+    def _create_task_template_(self, namelist_config: dict) -> TaskTemplate:
+        cfg = self.ctx.mm_config
+        #tdk: need to test with package-level overrides
+        data = cfg.aqm.task_defaults.save_paired
+        data["analysis"].update({"start_time": cfg.start_datetime, "end_time": cfg.end_datetime,
+                         "output_dir": self.output_dir,
+                         # "debug": namelist_config["debug_option"],
+                         "read": None,})
+                         # "save": {"paired": {"method": namelist_config["paired_format"],
+                         #                     "predix": namelist_config["paired_predix"],
+                         #                     "data": namelist_config[
+                         #                         "paired_save_data"]}}}}
+        save_paired = SavePairedTask.model_validate(data)
+        ret = save_paired.to_yaml()
+        model = ret.setdefault("model", {})
+        for mm_model in self.mm_models:
+            curr_model = model.setdefault(mm_model.label, {})
+            curr_model["files"] = mm_model.link_alldays_path_template
+            curr_model["mod_type"] = mm_model.cfg.type
+            curr_model["mod_kwargs"] = mm_model.cfg.kwargs
+            curr_model["radius_of_influence"] = mm_model.cfg.radius_of_influence
+            curr_model["mapping"] = {self.observations_title: self.cfg.mapping}
+            curr_model["variables"] = mm_model.cfg.variables
+            curr_model["projection"] = mm_model.cfg.projection
+            curr_model["plot_kwargs"] = mm_model.cfg.plot_kwargs.model_dump(mode="json")
+        obs = ret.setdefault("obs", {})
+        curr_obs = obs.setdefault(self.observations_title, {})
+        curr_obs["use_airnow"] = True
+        curr_obs["filename"] = self.observation_template
+        curr_obs["variables"] = self.cfg.observation_variables
+        return TaskTemplate.model_validate(ret)
 
     def _create_control_configs_for_scorecards_(self, namelist_config: Any, template: Template) -> None:
         LOGGER("creating scorecard control files")
