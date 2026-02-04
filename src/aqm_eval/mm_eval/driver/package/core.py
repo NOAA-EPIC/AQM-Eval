@@ -3,6 +3,7 @@
 import logging
 import re
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from functools import cached_property
 from pathlib import Path
 from typing import Any, Iterator, Literal
@@ -24,7 +25,7 @@ from aqm_eval.mm_eval.driver.context.base import AbstractDriverContext
 from aqm_eval.mm_eval.driver.model import Model
 from aqm_eval.mm_eval.driver.task.save_paired import SavePairedTask
 from aqm_eval.mm_eval.driver.task.scorecard import ScorecardTask
-from aqm_eval.mm_eval.driver.task.template import TaskTemplate
+from aqm_eval.mm_eval.driver.task.template import TaskTemplate, PlotTasksTemplate
 from aqm_eval.settings import SETTINGS
 from aqm_eval.shared import PathExisting, assert_directory_exists, calc_2d_chunks, get_or_create_path
 
@@ -63,6 +64,7 @@ class AbstractEvalPackage(ABC, AeBaseModel):
     ctx: AbstractDriverContext
 
     observations_title: str
+    observations_label: str
     key: PackageKey = Field(description="MM package key.")
     namelist_template: str = Field(description="Package template file.")
     tasks_default: tuple[TaskKey, ...] = Field(description="Default tasks for the package.")
@@ -296,55 +298,85 @@ class AbstractEvalPackage(ABC, AeBaseModel):
         for task in cfg["mm_tasks"]:
             assert isinstance(task, str)
 
-            LOGGER(f"{task=}")
-            template = self.j2_env.get_template(f"template_{task}.j2")
-            LOGGER(f"{template=}")
+
             task_key = TaskKey(task)
             match task_key:
                 case TaskKey.SCORECARD:
+                    LOGGER(f"{task=}")
+                    template = self.j2_env.get_template(f"template_{task}.j2")
+                    LOGGER(f"{template=}")
                     self._create_control_configs_for_scorecards_(namelist_config, template)
                 case TaskKey.SAVE_PAIRED:
-                    task_template = self._create_task_template_(namelist_config)
+                    task_template = self._create_task_template_()
                     curr_control_path = package_run_dir / f"control_{task}.yaml"
                     LOGGER(f"{curr_control_path=}")
                     curr_control_path.write_text(yaml.safe_dump(task_template.to_yaml(), sort_keys=False))
+                case TaskKey.TIMESERIES:
+                    task_template = self._create_plot_task_template_(task_key)
+                    curr_control_path = package_run_dir / f"control_{task}.yaml"
+                    LOGGER(f"{curr_control_path=}")
+                    curr_control_path.write_text(
+                        yaml.safe_dump(task_template.to_yaml(), sort_keys=False))
                 case _:
+                    LOGGER(f"{task=}")
+                    template = self.j2_env.get_template(f"template_{task}.j2")
+                    LOGGER(f"{template=}")
                     config_yaml = template.render({**namelist_config})
                     curr_control_path = package_run_dir / f"control_{task}.yaml"
                     LOGGER(f"{curr_control_path=}")
                     curr_control_path.write_text(config_yaml)
 
-    def _create_task_template_(self, namelist_config: dict) -> TaskTemplate:
+    def _create_task_template_(self) -> TaskTemplate:
         cfg = self.ctx.mm_config
         #tdk: need to test with package-level overrides
-        data = cfg.aqm.task_defaults.save_paired
+        data = deepcopy(cfg.aqm.task_defaults.save_paired)
         data["analysis"].update({"start_time": cfg.start_datetime, "end_time": cfg.end_datetime,
                          "output_dir": self.output_dir,
-                         # "debug": namelist_config["debug_option"],
-                         "read": None,})
-                         # "save": {"paired": {"method": namelist_config["paired_format"],
-                         #                     "predix": namelist_config["paired_predix"],
-                         #                     "data": namelist_config[
-                         #                         "paired_save_data"]}}}}
+                         "read": None})
         save_paired = SavePairedTask.model_validate(data)
         ret = save_paired.to_yaml()
-        model = ret.setdefault("model", {})
+        self._update_models_(ret)
+        self._update_obs_(ret)
+        return TaskTemplate.model_validate(ret)
+
+    def _create_plot_task_template_(self, task_key: TaskKey) -> PlotTasksTemplate:
+        cfg = self.ctx.mm_config
+        data = deepcopy(cfg.aqm.task_defaults.save_paired)
+        analysis = data["analysis"]
+        analysis["start_time"] = cfg.start_datetime
+        analysis["end_time"] = cfg.end_datetime
+        analysis["output_dir"] = self.output_dir
+        analysis["save"] = None
+        analysis["read"]["paired"]["filenames"] = {mm_model.label: f"{self.observations_label}_{mm_model.label}.nc4" for mm_model in self.mm_models}
+        task_data = getattr(cfg.aqm.task_defaults, task_key.value)
+        # tdk: need to test with package-level overrides
+        for plot_key, plot_data in task_data["plots"].items():
+            if plot_data["data"] is None:
+                plot_data["data"] = self.mm_model_labels
+        data.update(task_data)
+        self._update_models_(data)
+        self._update_obs_(data)
+        return PlotTasksTemplate.model_validate(data)
+
+    def _update_models_(self, target: dict) -> None:
+        model = target.setdefault("model", {})
         for mm_model in self.mm_models:
             curr_model = model.setdefault(mm_model.label, {})
             curr_model["files"] = mm_model.link_alldays_path_template
             curr_model["mod_type"] = mm_model.cfg.type
             curr_model["mod_kwargs"] = mm_model.cfg.kwargs
             curr_model["radius_of_influence"] = mm_model.cfg.radius_of_influence
-            curr_model["mapping"] = {self.observations_title: self.cfg.mapping}
+            curr_model["mapping"] = {self.observations_label: self.cfg.mapping}
             curr_model["variables"] = mm_model.cfg.variables
             curr_model["projection"] = mm_model.cfg.projection
             curr_model["plot_kwargs"] = mm_model.cfg.plot_kwargs.model_dump(mode="json")
-        obs = ret.setdefault("obs", {})
-        curr_obs = obs.setdefault(self.observations_title, {})
+
+    def _update_obs_(self, target: dict) -> None:
+        obs = target.setdefault("obs", {})
+        curr_obs = obs.setdefault(self.observations_label, {})
         curr_obs["use_airnow"] = True
         curr_obs["filename"] = self.observation_template
         curr_obs["variables"] = self.cfg.observation_variables
-        return TaskTemplate.model_validate(ret)
 
     def _create_control_configs_for_scorecards_(self, namelist_config: Any, template: Template) -> None:
         LOGGER("creating scorecard control files")

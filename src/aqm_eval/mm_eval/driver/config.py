@@ -10,7 +10,7 @@ from pydantic import Field, model_validator
 
 from aqm_eval.base import AeBaseModel
 from aqm_eval.logging_aqm_eval import LOGGER
-from aqm_eval.mm_eval.driver.task.save_paired import SavePaired
+from aqm_eval.mm_eval.driver.task.save_paired import SavePaired, SavePairedTask
 from aqm_eval.settings import SETTINGS
 from aqm_eval.shared import DateRange, get_str_nested, set_str_nested, update_left
 
@@ -138,7 +138,8 @@ class PlotKwargs(AeBaseModel):
 
 class TaskDefaults(AeBaseModel):
     execution: Execution = Field(description="Default execution settings for all tasks.")
-    save_paired: dict = Field(default={}, description="Default save paired settings (SavePaired model).")
+    save_paired: dict = Field(default={}, description="Default save paired settings (SavePairedTask model).")
+    timeseries: dict = Field(default={}, description="Default save paired settings (Plot model).")
 
 
 class AQMModelConfig(AeBaseModel):

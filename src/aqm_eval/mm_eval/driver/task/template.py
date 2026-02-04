@@ -1,7 +1,8 @@
 from typing import Any
 
 from aqm_eval.base import AeBaseModel
-from aqm_eval.mm_eval.driver.task.save_paired import SavePairedTask, Analysis
+from aqm_eval.mm_eval.driver.task.plot import PlotTask
+from aqm_eval.mm_eval.driver.task.save_paired import Analysis
 
 
 class Observations(AeBaseModel):
@@ -27,6 +28,13 @@ class TaskTemplate(AeBaseModel):
     model: dict[str, MM_Model]
     obs: dict[str, Observations]
 
+
+    def to_yaml(self) -> dict:
+        return self.model_dump(mode="json")
+
+
+class PlotTasksTemplate(TaskTemplate):
+    plots: dict[str, PlotTask]
 
     def to_yaml(self) -> dict:
         return self.model_dump(mode="json")

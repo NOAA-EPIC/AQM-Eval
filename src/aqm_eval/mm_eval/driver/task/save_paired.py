@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from pydantic import model_validator
+
 from aqm_eval.base import AeBaseModel
 
 
@@ -28,6 +30,14 @@ class Analysis(AeBaseModel):
     debug: bool
     save: Save | None
     read: Read | None
+
+    @model_validator(mode="after")
+    def _validate_(self) -> "Analysis":
+        if self.save is None and self.read is None:
+            raise ValueError("Either save or read must be set.")
+        if self.save is not None and self.read is not None:
+            raise ValueError("Only one of save or read can be set.")
+        return self
 
 class SavePairedTask(AeBaseModel):
     analysis: Analysis

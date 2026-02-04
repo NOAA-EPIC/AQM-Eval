@@ -278,6 +278,7 @@ melodies_monet_parm:
               tasks_per_node: 1
               walltime: 00:05:00
           tasks: {}
+
     task_defaults:
       execution:
         batchargs:
@@ -292,6 +293,38 @@ melodies_monet_parm:
               method: netcdf
               predix: null
               data: all
+          read:
+            paired:
+              method: netcdf
+              filenames: null
+      timeseries:
+        plots:
+          pg1:
+            type: "timeseries"
+            fig_kwargs:
+              figsize: [12, 6]
+            default_plot_kwargs:
+              linewidth: 2.0
+              markersize: 10
+            text_kwargs:
+              fontsize: 24
+            domain_type: [
+      "all",
+      "epa_region", "epa_region", "epa_region", "epa_region", "epa_region",
+      "epa_region", "epa_region", "epa_region", "epa_region", "epa_region",
+    ]
+            domain_name: [
+      "CONUS",
+      "R1", "R2", "R3", "R4", "R5",
+      "R6", "R7", "R8", "R9", "R10",
+    ]
+            data: null
+            data_proc:
+              rem_obs_nan: true  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.
+              set_axis: true  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.
+              ts_select_time: "time"  # Options: 'time' for UTC or 'time_local' for LT.  AQS are daily averages, use 'time' here.
+              ts_avg_window: "H"  # None for no averaging, pandas resample rule (e.g., 'H', 'D')
+
   platform_defaults:
     ursa:
       ncores_per_node: 192
