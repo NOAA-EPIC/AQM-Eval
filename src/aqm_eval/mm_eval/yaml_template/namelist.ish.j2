@@ -106,19 +106,19 @@ obs_variables:
 {#  rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.#}
 {#  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.#}
 
-# ==== pg4 - spatial_overlay ====
-spatial_overlay_fig_kwargs:
-  states: True
-  figsize: [10, 5]
-spatial_overlay_text_kwargs:
-  fontsize: 24
-spatial_overlay_domain_type: ["country"]
-spatial_overlay_domain_name: ["US"]
-spatial_overlay_dataset: {{ package.mm_model_labels }}
-spatial_overlay_data_proc:
-  filter_dict: {'longitude':{'value':0,'oper':'<'}} # Constrain map to US only.
-  rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.
-  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.
+{## ==== pg4 - spatial_overlay ====#}
+{#spatial_overlay_fig_kwargs:#}
+{#  states: True#}
+{#  figsize: [10, 5]#}
+{#spatial_overlay_text_kwargs:#}
+{#  fontsize: 24#}
+{#spatial_overlay_domain_type: ["country"]#}
+{#spatial_overlay_domain_name: ["US"]#}
+{#spatial_overlay_dataset: {{ package.mm_model_labels }}#}
+{#spatial_overlay_data_proc:#}
+{#  filter_dict: {'longitude':{'value':0,'oper':'<'}} # Constrain map to US only.#}
+{#  rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.#}
+{#  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.#}
 
 # ==== pg5 - boxplot ====
 boxplot_fig_kwargs:
