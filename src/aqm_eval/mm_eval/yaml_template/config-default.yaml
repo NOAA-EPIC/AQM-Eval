@@ -134,6 +134,12 @@ melodies_monet_parm:
               tasks_per_node: auto
               walltime: 00:15:00
           tasks: {}
+        task_overlay:
+          spatial_bias:
+            plots:
+              pg3:
+                domain_type: ["country"]
+                domain_name: ["US"]
       aqs_pm:
         observation_template: null
         observation_variables:
@@ -206,6 +212,12 @@ melodies_monet_parm:
               tasks_per_node: auto
               walltime: 00:30:00
           tasks: {}
+        task_overlay:
+          spatial_bias:
+            plots:
+              pg3:
+                domain_type: ["all"]
+                domain_name: ["CONUS"]
       aqs_voc:
         observation_template: null
         observation_variables:
@@ -278,6 +290,12 @@ melodies_monet_parm:
               tasks_per_node: 1
               walltime: 00:05:00
           tasks: {}
+        task_overlay:
+          spatial_bias:
+            plots:
+              pg3:
+                domain_type: ["all"]
+                domain_name: ["CONUS"]
 
     task_defaults:
       execution:
@@ -336,6 +354,26 @@ melodies_monet_parm:
               fontsize: 24
             domain_type: [ 'all', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region' ]
             domain_name: [ 'CONUS', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10' ]
+            data: null
+            data_proc:
+              rem_obs_nan: true
+              set_axis: true
+      spatial_bias:
+        plots:
+          pg3:
+            type: "spatial_bias"
+            fig_kwargs:
+              states: true
+              figsize: [10, 5]
+            text_kwargs:
+              fontsize: 24
+            default_plot_kwargs: {}
+            domain_type: [ 'all',
+                           'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region',
+                           'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region' ]
+            domain_name: [ 'CONUS',
+                           'R1', 'R2', 'R3', 'R4', 'R5',
+                           'R6', 'R7', 'R8', 'R9', 'R10' ]
             data: null
             data_proc:
               rem_obs_nan: true
