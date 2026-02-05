@@ -329,7 +329,8 @@ class AbstractEvalPackage(ABC, AeBaseModel):
     def _create_task_template_(self) -> TaskTemplate:
         cfg = self.ctx.mm_config
         #tdk: need to test with package-level overrides
-        data = deepcopy(cfg.aqm.task_defaults.save_paired)
+        # data = deepcopy(cfg.aqm.task_defaults.save_paired)
+        data = deepcopy(self.cfg.task_mm_config[TaskKey.SAVE_PAIRED])
         data["analysis"].update({"start_time": cfg.start_datetime, "end_time": cfg.end_datetime,
                          "output_dir": self.output_dir,
                          "read": None})
@@ -341,7 +342,8 @@ class AbstractEvalPackage(ABC, AeBaseModel):
 
     def _create_plot_task_template_(self, task_key: TaskKey) -> PlotTasksTemplate:
         cfg = self.ctx.mm_config
-        data = deepcopy(cfg.aqm.task_defaults.save_paired)
+        # data = deepcopy(cfg.aqm.task_defaults.save_paired)
+        data = deepcopy(self.cfg.task_mm_config[TaskKey.SAVE_PAIRED])
         analysis = data["analysis"]
         analysis["start_time"] = cfg.start_datetime
         analysis["end_time"] = cfg.end_datetime

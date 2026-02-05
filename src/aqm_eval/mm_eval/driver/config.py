@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from datetime import datetime
 from enum import StrEnum, unique
 from functools import cached_property
@@ -121,6 +122,8 @@ class PackageConfig(AeBaseModel):
     execution: PackageExecution = Field(
         default_factory=lambda x: PackageExecution.model_validate({}), description="Optional package execution settings."
     )
+    task_overlay: dict[TaskKey, dict]
+    task_mm_config: dict[TaskKey, dict]
 
     @model_validator(mode="after")
     def _validate_model_after_(self) -> "PackageConfig":
@@ -324,6 +327,12 @@ class Config(AeBaseModel):
                     task_value["batchargs"]["tasks_per_node"] = get_str_nested(
                         data, f"platform_defaults.{platform_key.value}.ncores_per_node"
                     )
+
+            for task_key in TaskKey:
+                task_plot_lhs = deepcopy(root_aqm["task_defaults"].setdefault(task_key.value, {}))
+                task_plot_rhs = root_aqm["packages"][package_key.value].setdefault("task_overlay", {}).setdefault(task_key.value, {})
+                update_left(task_plot_lhs, task_plot_rhs)
+                root_aqm["packages"][package_key.value].setdefault("task_mm_config", {})[task_key.value] = task_plot_lhs
 
         if root_aqm["task_defaults"]["execution"]["batchargs"]["tasks_per_node"] == "auto":
             root_aqm["task_defaults"]["execution"]["batchargs"]["tasks_per_node"] = get_str_nested(
