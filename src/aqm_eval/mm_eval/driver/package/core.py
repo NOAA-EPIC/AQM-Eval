@@ -350,7 +350,8 @@ class AbstractEvalPackage(ABC, AeBaseModel):
         analysis["output_dir"] = self.output_dir
         analysis["save"] = None
         analysis["read"]["paired"]["filenames"] = {mm_model.label: f"{self.observations_label}_{mm_model.label}.nc4" for mm_model in self.mm_models}
-        task_data = getattr(cfg.aqm.task_defaults, task_key.value)
+        # task_data = getattr(cfg.aqm.task_defaults, task_key.value)
+        task_data = deepcopy(self.cfg.task_mm_config[task_key])
         # tdk: need to test with package-level overrides
         for plot_key, plot_data in task_data["plots"].items():
             if plot_data["data"] is None:
