@@ -85,30 +85,30 @@ obs_variables:
     vdiff_plot: 2.0 #Opt +/- range to use in bias plots. To apply to a plot, change restrict_yaxis = True.
     nlevels_plot: 20 #Opt number of levels used in colorbar for contourf plot.
 
-# ==== pg1 - timeseries ====
-timeseries_fig_kwargs:
-  figsize: [12, 6]
-timeseries_plot_kwargs:
-  linewidth: 2.0
-  markersize: 10
-timeseries_text_kwargs:
-  fontsize: 24
-timeseries_domain_type: [
-  "all",
-  "epa_region", "epa_region", "epa_region", "epa_region", "epa_region",
-  "epa_region", "epa_region", "epa_region", "epa_region", "epa_region",
-]
-timeseries_domain_name: [
-  "CONUS",
-  "R1", "R2", "R3", "R4", "R5",
-  "R6", "R7", "R8", "R9", "R10",
-]
-timeseries_dataset: {{ package.mm_model_labels }}
-timeseries_data_proc:
-  rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.
-  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.
-  ts_select_time: "time_local"  # Options: 'time' for UTC or 'time_local' for LT
-  ts_avg_window: "H"  # None for no averaging, pandas resample rule (e.g., 'H', 'D')
+{## ==== pg1 - timeseries ====#}
+{#timeseries_fig_kwargs:#}
+{#  figsize: [12, 6]#}
+{#timeseries_plot_kwargs:#}
+{#  linewidth: 2.0#}
+{#  markersize: 10#}
+{#timeseries_text_kwargs:#}
+{#  fontsize: 24#}
+{#timeseries_domain_type: [#}
+{#  "all",#}
+{#  "epa_region", "epa_region", "epa_region", "epa_region", "epa_region",#}
+{#  "epa_region", "epa_region", "epa_region", "epa_region", "epa_region",#}
+{#]#}
+{#timeseries_domain_name: [#}
+{#  "CONUS",#}
+{#  "R1", "R2", "R3", "R4", "R5",#}
+{#  "R6", "R7", "R8", "R9", "R10",#}
+{#]#}
+{#timeseries_dataset: {{ package.mm_model_labels }}#}
+{#timeseries_data_proc:#}
+{#  rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.#}
+{#  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.#}
+{#  ts_select_time: "time_local"  # Options: 'time' for UTC or 'time_local' for LT#}
+{#  ts_avg_window: "H"  # None for no averaging, pandas resample rule (e.g., 'H', 'D')#}
 
 
 # ==== pg2 - taylor ====
