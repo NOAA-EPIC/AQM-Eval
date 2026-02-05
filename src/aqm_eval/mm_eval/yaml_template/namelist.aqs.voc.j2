@@ -211,23 +211,23 @@ obs_variables:
 {#  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.#}
 
 
-# ==== pg6 - multi_boxplot ====
-multi_boxplot_fig_kwargs:
-  figsize: [8, 6]
-multi_boxplot_text_kwargs:
-  fontsize: 24
-multi_boxplot_domain_type: ["all"]
-multi_boxplot_domain_name: ["CONUS"]
-multi_boxplot_region_type: ["epa_region"]
-multi_boxplot_region_name: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10"]
-multi_boxplot_urban_rural_name: ["msa_name"]
-multi_boxplot_urban_rural_value: '""'
-multi_boxplot_eval_method: '"NME"'  # support 'RMSE', 'IOA' ,' NMB', 'NME'
-multi_boxplot_dataset: {{ package.mm_model_labels }}
-multi_boxplot_dataset_label: {{ package.mm_model_titles_with_obs }}
-multi_boxplot_data_proc:
-  rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.
-  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.
+{## ==== pg6 - multi_boxplot ====#}
+{#multi_boxplot_fig_kwargs:#}
+{#  figsize: [8, 6]#}
+{#multi_boxplot_text_kwargs:#}
+{#  fontsize: 24#}
+{#multi_boxplot_domain_type: ["all"]#}
+{#multi_boxplot_domain_name: ["CONUS"]#}
+{#multi_boxplot_region_type: ["epa_region"]#}
+{#multi_boxplot_region_name: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10"]#}
+{#multi_boxplot_urban_rural_name: ["msa_name"]#}
+{#multi_boxplot_urban_rural_value: '""'#}
+{#multi_boxplot_eval_method: '"NME"'  # support 'RMSE', 'IOA' ,' NMB', 'NME'#}
+{#multi_boxplot_dataset: {{ package.mm_model_labels }}#}
+{#multi_boxplot_dataset_label: {{ package.mm_model_titles_with_obs }}#}
+{#multi_boxplot_data_proc:#}
+{#  rem_obs_nan: True  # True: Remove all points where model or obs is NaN; False: Remove only points where model is NaN.#}
+{#  set_axis: True  # If true, add `vmin_plot` and `vmax_plot` for each variable in obs.#}
 
 # ==== pg8 - csi ====
 csi_fig_kwargs:

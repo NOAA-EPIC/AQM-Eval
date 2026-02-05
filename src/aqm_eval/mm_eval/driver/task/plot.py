@@ -11,3 +11,10 @@ class PlotTask(AeBaseModel):
     domain_name: list[str]
     data: list[str]
     data_proc: dict
+    model_name_list: list[str]
+
+    region_name: list[str] | None = None
+    region_list: list[str] | None = None
+    urban_rural_name: list[str] | None = None
+    urban_rural_differentiate_value: str | None = None
+    better_or_worse_method: str | None = None

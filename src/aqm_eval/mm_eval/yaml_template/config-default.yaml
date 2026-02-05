@@ -329,6 +329,7 @@ melodies_monet_parm:
         plots:
           pg1:
             type: "timeseries"
+            model_name_list: null
             fig_kwargs:
               figsize: [12, 6]
             default_plot_kwargs:
@@ -356,6 +357,7 @@ melodies_monet_parm:
         plots:
           pg2:
             type: "taylor"
+            model_name_list: null
             fig_kwargs:
               figsize: [8, 8]
             default_plot_kwargs:
@@ -382,6 +384,7 @@ melodies_monet_parm:
             text_kwargs:
               fontsize: 24
             default_plot_kwargs: {}
+            model_name_list: null
             domain_type: [ 'all',
                            'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region',
                            'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region' ]
@@ -404,6 +407,7 @@ melodies_monet_parm:
               fontsize: 24
             domain_type: ['all']
             domain_name: ['CONUS']
+            model_name_list: null
             data: null
             data_proc:
               rem_obs_nan: true
@@ -424,6 +428,28 @@ melodies_monet_parm:
                            'R1', 'R2', 'R3', 'R4', 'R5',
                            'R6', 'R7', 'R8', 'R9', 'R10' ]
             data: null
+            data_proc:
+              rem_obs_nan: true
+              set_axis: true
+            model_name_list: null
+      multi_boxplot:
+        plots:
+          pg6:
+            type: "multi_boxplot"
+            fig_kwargs:
+              figsize: [8, 6]
+            text_kwargs:
+              fontsize: 24
+            default_plot_kwargs: {}
+            domain_type: [ 'all' ]
+            domain_name: [ 'CONUS' ]
+            region_name: [ 'epa_region' ]
+            region_list: [ 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10' ]
+            urban_rural_name: [ 'msa_name' ]
+            urban_rural_differentiate_value: ""
+            better_or_worse_method: "NME"
+            data: null
+            model_name_list: null
             data_proc:
               rem_obs_nan: true
               set_axis: true
