@@ -362,8 +362,12 @@ melodies_monet_parm:
               markersize: 10
             text_kwargs:
               fontsize: 24
-            domain_type: [ 'all', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region' ]
-            domain_name: [ 'CONUS', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10' ]
+            domain_type: [ 'all',
+                           'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region',
+                           'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region' ]
+            domain_name: [ 'CONUS',
+                           'R1', 'R2', 'R3', 'R4', 'R5',
+                           'R6', 'R7', 'R8', 'R9', 'R10' ]
             data: null
             data_proc:
               rem_obs_nan: true
@@ -400,6 +404,25 @@ melodies_monet_parm:
               fontsize: 24
             domain_type: ['all']
             domain_name: ['CONUS']
+            data: null
+            data_proc:
+              rem_obs_nan: true
+              set_axis: true
+      boxplot:
+        plots:
+          pg5:
+            type: "boxplot"
+            fig_kwargs:
+              figsize: [8, 6]
+            default_plot_kwargs: {}
+            text_kwargs:
+              fontsize: 24
+            domain_type: [ 'all',
+                           'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region',
+                           'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region' ]
+            domain_name: [ 'CONUS',
+                           'R1', 'R2', 'R3', 'R4', 'R5',
+                           'R6', 'R7', 'R8', 'R9', 'R10' ]
             data: null
             data_proc:
               rem_obs_nan: true
