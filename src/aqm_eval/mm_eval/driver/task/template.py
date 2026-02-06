@@ -29,7 +29,6 @@ class TaskTemplate(AeBaseModel):
     model: dict[str, MM_Model]
     obs: dict[str, Observations]
 
-
     def to_yaml(self) -> dict:
         return self.model_dump(mode="json")
 

@@ -11,7 +11,6 @@ from pydantic import Field, model_validator
 
 from aqm_eval.base import AeBaseModel
 from aqm_eval.logging_aqm_eval import LOGGER
-from aqm_eval.mm_eval.driver.task.save_paired import SavePaired, SavePairedTask
 from aqm_eval.settings import SETTINGS
 from aqm_eval.shared import DateRange, get_str_nested, set_str_nested, update_left
 
@@ -330,7 +329,9 @@ class Config(AeBaseModel):
 
             for task_key in TaskKey:
                 task_plot_lhs = deepcopy(root_aqm["task_defaults"].setdefault(task_key.value, {}))
-                task_plot_rhs = root_aqm["packages"][package_key.value].setdefault("task_overlay", {}).setdefault(task_key.value, {})
+                task_plot_rhs = (
+                    root_aqm["packages"][package_key.value].setdefault("task_overlay", {}).setdefault(task_key.value, {})
+                )
                 update_left(task_plot_lhs, task_plot_rhs)
                 root_aqm["packages"][package_key.value].setdefault("task_mm_config", {})[task_key.value] = task_plot_lhs
 

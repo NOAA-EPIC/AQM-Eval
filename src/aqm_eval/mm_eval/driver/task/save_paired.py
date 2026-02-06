@@ -19,13 +19,14 @@ class ReadPaired(AeBaseModel):
     method: str
     filenames: dict[str, str]
 
+
 class Read(AeBaseModel):
     paired: ReadPaired
 
 
 class Analysis(AeBaseModel):
-    start_time: str # yyyy-mm-dd-HH:MM:SS UTC
-    end_time: str # yyyy-mm-dd-HH:MM:SS UTC
+    start_time: str  # yyyy-mm-dd-HH:MM:SS UTC
+    end_time: str  # yyyy-mm-dd-HH:MM:SS UTC
     output_dir: Path
     debug: bool
     save: Save | None
@@ -38,6 +39,7 @@ class Analysis(AeBaseModel):
         if self.save is not None and self.read is not None:
             raise ValueError("Only one of save or read can be set.")
         return self
+
 
 class SavePairedTask(AeBaseModel):
     analysis: Analysis

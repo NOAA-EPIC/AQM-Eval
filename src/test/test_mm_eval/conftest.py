@@ -19,7 +19,6 @@ from aqm_eval.mm_eval.driver.config import (
     ScorecardConfig,
 )
 from aqm_eval.mm_eval.driver.context.srw import SRWContext, SrwPlatform, SrwUser, SrwWorkflow
-from aqm_eval.shared import update_left
 
 _TEST_GLOBALS: dict[str, Any] = {"tmp_path": None, "bin_dir": None, "host_key": "eval1"}
 
@@ -195,7 +194,7 @@ def config_content(request: FixtureRequest, config: Config, bin_dir: Path) -> di
 def get_config_content(bin_dir: Path, config: Config, config_src: str) -> dict:
     match config_src:
         case "polyfactory-only":
-            #tdk: need to address occasional failures in test infra with random data; consider having build use the default yaml values
+            # tdk: need to address occasional failures in test infra with random data; consider having build use the default yaml values
             new_content = config.to_yaml()
         case "srw":
             srw_config = bin_dir / "srw-config.yaml"
