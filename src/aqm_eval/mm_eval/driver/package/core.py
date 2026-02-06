@@ -287,12 +287,12 @@ class AbstractEvalPackage(ABC, AeBaseModel):
         out_mm_cfg.write_text(yaml.safe_dump(self.ctx.mm_config.to_yaml(), sort_keys=False))
 
         cfg = {"ctx": self.ctx, "mm_tasks": tuple([ii.value for ii in self.tasks]), "package": self}
-        LOGGER("rendering namelist config")
-        namelist_config_str = self.j2_env.get_template(self.namelist_template).render(cfg)
-        namelist_config = yaml.safe_load(namelist_config_str)
-        with open(package_run_dir / "namelist.yaml", "w") as f:
-            f.write(namelist_config_str)
-        namelist_config["package"] = self
+        # LOGGER("rendering namelist config")
+        # namelist_config_str = self.j2_env.get_template(self.namelist_template).render(cfg)
+        # namelist_config = yaml.safe_load(namelist_config_str)
+        # with open(package_run_dir / "namelist.yaml", "w") as f:
+        #     f.write(namelist_config_str)
+        # namelist_config["package"] = self
 
         assert isinstance(cfg["mm_tasks"], tuple)
         for task in cfg["mm_tasks"]:
@@ -302,10 +302,10 @@ class AbstractEvalPackage(ABC, AeBaseModel):
             task_key = TaskKey(task)
             match task_key:
                 case TaskKey.SCORECARD:
-                    LOGGER(f"{task=}")
-                    template = self.j2_env.get_template(f"template_{task}.j2")
-                    LOGGER(f"{template=}")
-                    self._create_control_configs_for_scorecards_(namelist_config, template)
+                    # LOGGER(f"{task=}")
+                    # template = self.j2_env.get_template(f"template_{task}.j2")
+                    # LOGGER(f"{template=}")
+                    self._create_control_configs_for_scorecards_()
                 case TaskKey.SAVE_PAIRED:
                     task_template = self._create_task_template_()
                     curr_control_path = package_run_dir / f"control_{task}.yaml"
@@ -411,7 +411,7 @@ class AbstractEvalPackage(ABC, AeBaseModel):
         curr_obs["filename"] = self.observation_template
         curr_obs["variables"] = self.cfg.observation_variables
 
-    def _create_control_configs_for_scorecards_(self, namelist_config: Any, template: Template) -> None:
+    def _create_control_configs_for_scorecards_(self) -> None:
         LOGGER("creating scorecard control files")
         for scorecard_key, scorecard_cfg in self.ctx.mm_config.aqm.scorecards.items():
             for scorecard_method in ScorecardMethod:
@@ -431,11 +431,14 @@ class AbstractEvalPackage(ABC, AeBaseModel):
                     model_name_list=[self.observations_title] + [ii.label for ii in scorecard_models],
                 )
                 plot_yaml = scorecard_task.to_yaml()
-                plot_yaml_str = yaml.safe_dump(plot_yaml)
-                config_yaml = template.render({**namelist_config, **{"plot_yaml_str": plot_yaml_str}})
+                self._update_models_(plot_yaml)
+                self._update_obs_(plot_yaml)
+
+                # plot_yaml_str = yaml.safe_dump(plot_yaml)
+                # config_yaml = template.render({**namelist_config, **{"plot_yaml_str": plot_yaml_str}})
                 curr_control_path = self.run_dir / f"control_scorecard_{scorecard_method.value}_{scorecard_key}.yaml"
                 LOGGER(f"{curr_control_path=}")
-                curr_control_path.write_text(config_yaml)
+                curr_control_path.write_text(yaml.safe_dump(plot_yaml, sort_keys=False))
 
 
 class AbstractDaskOperation(ABC, AeBaseModel):

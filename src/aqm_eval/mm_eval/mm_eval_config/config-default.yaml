@@ -148,12 +148,12 @@ melodies_monet_parm:
               tasks_per_node: auto
               walltime: 00:15:00
           tasks: {}
-        task_overlay:
-          spatial_bias:
-            plots:
-              pg3:
-                domain_type: ["country"]
-                domain_name: ["US"]
+#        task_overlay:
+#          spatial_bias:
+#            plots:
+#              pg3:
+#                domain_type: ["country"]
+#                domain_name: ["US"]
       aqs_pm:
         observation_template: null
         observation_variables:
