@@ -25,7 +25,7 @@ from aqm_eval.mm_eval.driver.context.base import AbstractDriverContext
 from aqm_eval.mm_eval.driver.model import Model
 from aqm_eval.mm_eval.driver.task.save_paired import SavePairedTask
 from aqm_eval.mm_eval.driver.task.scorecard import ScorecardTask
-from aqm_eval.mm_eval.driver.task.template import TaskTemplate, PlotTasksTemplate
+from aqm_eval.mm_eval.driver.task.template import TaskTemplate, PlotTasksTemplate, StatsTaskTemplate
 from aqm_eval.settings import SETTINGS
 from aqm_eval.shared import PathExisting, assert_directory_exists, calc_2d_chunks, get_or_create_path
 
@@ -317,14 +317,21 @@ class AbstractEvalPackage(ABC, AeBaseModel):
                     LOGGER(f"{curr_control_path=}")
                     curr_control_path.write_text(
                         yaml.safe_dump(task_template.to_yaml(), sort_keys=False))
-                case _:
-                    LOGGER(f"{task=}")
-                    template = self.j2_env.get_template(f"template_{task}.j2")
-                    LOGGER(f"{template=}")
-                    config_yaml = template.render({**namelist_config})
+                case TaskKey.STATS:
+                    task_template = self._create_stats_task_template_()
                     curr_control_path = package_run_dir / f"control_{task}.yaml"
                     LOGGER(f"{curr_control_path=}")
-                    curr_control_path.write_text(config_yaml)
+                    curr_control_path.write_text(
+                        yaml.safe_dump(task_template.to_yaml(), sort_keys=False))
+                case _:
+                    raise NotImplementedError(task_key)
+                    # LOGGER(f"{task=}")
+                    # template = self.j2_env.get_template(f"template_{task}.j2")
+                    # LOGGER(f"{template=}")
+                    # config_yaml = template.render({**namelist_config})
+                    # curr_control_path = package_run_dir / f"control_{task}.yaml"
+                    # LOGGER(f"{curr_control_path=}")
+                    # curr_control_path.write_text(config_yaml)
 
     def _create_task_template_(self) -> TaskTemplate:
         cfg = self.ctx.mm_config
@@ -339,6 +346,27 @@ class AbstractEvalPackage(ABC, AeBaseModel):
         self._update_models_(ret)
         self._update_obs_(ret)
         return TaskTemplate.model_validate(ret)
+
+    def _create_stats_task_template_(self) -> StatsTaskTemplate:
+        cfg = self.ctx.mm_config
+        # data = deepcopy(cfg.aqm.task_defaults.save_paired)
+        data = deepcopy(self.cfg.task_mm_config[TaskKey.SAVE_PAIRED])
+        analysis = data["analysis"]
+        analysis["start_time"] = cfg.start_datetime
+        analysis["end_time"] = cfg.end_datetime
+        analysis["output_dir"] = self.output_dir
+        analysis["save"] = None
+        analysis["read"]["paired"]["filenames"] = {
+            mm_model.label: f"{self.observations_label}_{mm_model.label}.nc4" for mm_model in
+            self.mm_models}
+        # task_data = getattr(cfg.aqm.task_defaults, task_key.value)
+        task_data = deepcopy(self.cfg.task_mm_config[TaskKey.STATS])
+        task_data["data"] = self.mm_model_labels
+        data.update({TaskKey.STATS.value: task_data})
+        self._update_models_(data)
+        self._update_obs_(data)
+        return StatsTaskTemplate.model_validate(data)
+
 
     def _create_plot_task_template_(self, task_key: TaskKey) -> PlotTasksTemplate:
         cfg = self.ctx.mm_config

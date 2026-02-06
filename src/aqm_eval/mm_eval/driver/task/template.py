@@ -3,6 +3,7 @@ from typing import Any
 from aqm_eval.base import AeBaseModel
 from aqm_eval.mm_eval.driver.task.plot import PlotTask
 from aqm_eval.mm_eval.driver.task.save_paired import Analysis
+from aqm_eval.mm_eval.driver.task.stats import StatsTask
 
 
 class Observations(AeBaseModel):
@@ -38,3 +39,7 @@ class PlotTasksTemplate(TaskTemplate):
 
     def to_yaml(self) -> dict:
         return self.model_dump(mode="json")
+
+
+class StatsTaskTemplate(TaskTemplate):
+    stats: StatsTask
