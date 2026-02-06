@@ -95,6 +95,10 @@ melodies_monet_parm:
                 domain_name: [ 'CONUS',
                                'R1', 'R2', 'R3', 'R4', 'R5',
                                'R6', 'R7', 'R8', 'R9', 'R10' ]
+          csi:
+            plots:
+              pg8:
+                score_name: "Critical Success Index"
       ish:
         observation_template: null
         observation_variables:
@@ -453,6 +457,24 @@ melodies_monet_parm:
             data_proc:
               rem_obs_nan: true
               set_axis: true
+      csi:
+        plots:
+          pg8:
+            type: "csi"
+            fig_kwargs:
+              figsize: [8, 6]
+            text_kwargs:
+              fontsize': 24
+            default_plot_kwargs: {}
+            domain_type: [ 'all', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region', 'epa_region' ]
+            domain_name: [ 'CONUS', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10' ]
+            threshold_list: [1, 5, 10, 20, 40, 60, 80, 100]
+            score_name: "Hit Rate"
+            data: null
+            model_name_list: null
+            data_proc:
+              rem_obs_nan: true
+              set_axis: false
 
   platform_defaults:
     ursa:

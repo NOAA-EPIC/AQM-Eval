@@ -311,7 +311,7 @@ class AbstractEvalPackage(ABC, AeBaseModel):
                     curr_control_path = package_run_dir / f"control_{task}.yaml"
                     LOGGER(f"{curr_control_path=}")
                     curr_control_path.write_text(yaml.safe_dump(task_template.to_yaml(), sort_keys=False))
-                case TaskKey.TIMESERIES | TaskKey.TAYLOR | TaskKey.SPATIAL_BIAS | TaskKey.SPATIAL_OVERLAY | TaskKey.BOXPLOT | TaskKey.MULTI_BOXPLOT:
+                case TaskKey.TIMESERIES | TaskKey.TAYLOR | TaskKey.SPATIAL_BIAS | TaskKey.SPATIAL_OVERLAY | TaskKey.BOXPLOT | TaskKey.MULTI_BOXPLOT | TaskKey.CSI:
                     task_template = self._create_plot_task_template_(task_key)
                     curr_control_path = package_run_dir / f"control_{task}.yaml"
                     LOGGER(f"{curr_control_path=}")

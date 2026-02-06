@@ -13,6 +13,8 @@ class PlotTask(AeBaseModel):
     data_proc: dict
     model_name_list: list[str]
 
+    score_name: str | None = None
+    threshold_list: list[float] | None = None
     region_name: list[str] | None = None
     region_list: list[str] | None = None
     urban_rural_name: list[str] | None = None
