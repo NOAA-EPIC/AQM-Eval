@@ -66,7 +66,6 @@ class AbstractEvalPackage(ABC, AeBaseModel):
     observations_title: str
     observations_label: str
     key: PackageKey = Field(description="MM package key.")
-    namelist_template: str = Field(description="Package template file.")
     tasks_default: tuple[TaskKey, ...] = Field(description="Default tasks for the package.")
 
     @cached_property
@@ -286,29 +285,14 @@ class AbstractEvalPackage(ABC, AeBaseModel):
         out_mm_cfg = package_run_dir / "melodies_monet_parm.yaml"
         out_mm_cfg.write_text(yaml.safe_dump(self.ctx.mm_config.to_yaml(), sort_keys=False))
 
-        cfg = {"ctx": self.ctx, "mm_tasks": tuple([ii.value for ii in self.tasks]), "package": self}
-        # LOGGER("rendering namelist config")
-        # namelist_config_str = self.j2_env.get_template(self.namelist_template).render(cfg)
-        # namelist_config = yaml.safe_load(namelist_config_str)
-        # with open(package_run_dir / "namelist.yaml", "w") as f:
-        #     f.write(namelist_config_str)
-        # namelist_config["package"] = self
-
-        assert isinstance(cfg["mm_tasks"], tuple)
-        for task in cfg["mm_tasks"]:
-            assert isinstance(task, str)
-
-            task_key = TaskKey(task)
+        for task_key in self.tasks:
+            curr_control_path = package_run_dir / f"control_{task_key.value}.yaml"
+            LOGGER(f"{curr_control_path=}")
             match task_key:
                 case TaskKey.SCORECARD:
-                    # LOGGER(f"{task=}")
-                    # template = self.j2_env.get_template(f"template_{task}.j2")
-                    # LOGGER(f"{template=}")
                     self._create_control_configs_for_scorecards_()
                 case TaskKey.SAVE_PAIRED:
                     task_template = self._create_task_template_()
-                    curr_control_path = package_run_dir / f"control_{task}.yaml"
-                    LOGGER(f"{curr_control_path=}")
                     curr_control_path.write_text(yaml.safe_dump(task_template.to_yaml(), sort_keys=False))
                 case (
                     TaskKey.TIMESERIES
@@ -320,28 +304,15 @@ class AbstractEvalPackage(ABC, AeBaseModel):
                     | TaskKey.CSI
                 ):
                     task_template = self._create_plot_task_template_(task_key)
-                    curr_control_path = package_run_dir / f"control_{task}.yaml"
-                    LOGGER(f"{curr_control_path=}")
                     curr_control_path.write_text(yaml.safe_dump(task_template.to_yaml(), sort_keys=False))
                 case TaskKey.STATS:
                     task_template = self._create_stats_task_template_()
-                    curr_control_path = package_run_dir / f"control_{task}.yaml"
-                    LOGGER(f"{curr_control_path=}")
                     curr_control_path.write_text(yaml.safe_dump(task_template.to_yaml(), sort_keys=False))
                 case _:
                     raise NotImplementedError(task_key)
-                    # LOGGER(f"{task=}")
-                    # template = self.j2_env.get_template(f"template_{task}.j2")
-                    # LOGGER(f"{template=}")
-                    # config_yaml = template.render({**namelist_config})
-                    # curr_control_path = package_run_dir / f"control_{task}.yaml"
-                    # LOGGER(f"{curr_control_path=}")
-                    # curr_control_path.write_text(config_yaml)
 
     def _create_task_template_(self) -> TaskTemplate:
         cfg = self.ctx.mm_config
-        # tdk: need to test with package-level overrides
-        # data = deepcopy(cfg.aqm.task_defaults.save_paired)
         data = deepcopy(self.cfg.task_mm_config[TaskKey.SAVE_PAIRED])
         data["analysis"].update(
             {"start_time": cfg.start_datetime, "end_time": cfg.end_datetime, "output_dir": self.output_dir, "read": None}
@@ -354,7 +325,6 @@ class AbstractEvalPackage(ABC, AeBaseModel):
 
     def _create_stats_task_template_(self) -> StatsTaskTemplate:
         cfg = self.ctx.mm_config
-        # data = deepcopy(cfg.aqm.task_defaults.save_paired)
         data = deepcopy(self.cfg.task_mm_config[TaskKey.SAVE_PAIRED])
         analysis = data["analysis"]
         analysis["start_time"] = cfg.start_datetime
@@ -364,7 +334,6 @@ class AbstractEvalPackage(ABC, AeBaseModel):
         analysis["read"]["paired"]["filenames"] = {
             mm_model.label: f"{self.observations_label}_{mm_model.label}.nc4" for mm_model in self.mm_models
         }
-        # task_data = getattr(cfg.aqm.task_defaults, task_key.value)
         task_data = deepcopy(self.cfg.task_mm_config[TaskKey.STATS])
         task_data["data"] = self.mm_model_labels
         data.update({TaskKey.STATS.value: task_data})
@@ -374,7 +343,6 @@ class AbstractEvalPackage(ABC, AeBaseModel):
 
     def _create_plot_task_template_(self, task_key: TaskKey) -> PlotTasksTemplate:
         cfg = self.ctx.mm_config
-        # data = deepcopy(cfg.aqm.task_defaults.save_paired)
         data = deepcopy(self.cfg.task_mm_config[TaskKey.SAVE_PAIRED])
         analysis = data["analysis"]
         analysis["start_time"] = cfg.start_datetime
@@ -384,9 +352,7 @@ class AbstractEvalPackage(ABC, AeBaseModel):
         analysis["read"]["paired"]["filenames"] = {
             mm_model.label: f"{self.observations_label}_{mm_model.label}.nc4" for mm_model in self.mm_models
         }
-        # task_data = getattr(cfg.aqm.task_defaults, task_key.value)
         task_data = deepcopy(self.cfg.task_mm_config[task_key])
-        # tdk: need to test with package-level overrides
         for plot_key, plot_data in task_data["plots"].items():
             if plot_data["data"] is None:
                 plot_data["data"] = self.mm_model_labels

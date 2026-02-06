@@ -9,7 +9,6 @@ class AQS_VOC_EvalPackage(AbstractEvalPackage):
     key: PackageKey = PackageKey.AQS_VOC
     observations_title: str = "AQS"
     observations_label: str = "aqs_voc"
-    namelist_template: str = "namelist.aqs.voc.j2"
     tasks_default: tuple[TaskKey, ...] = (
         TaskKey.SAVE_PAIRED,
         TaskKey.TIMESERIES,
